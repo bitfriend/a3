@@ -21,6 +21,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:effektio/l10n/l10n.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:themed/themed.dart';
 
@@ -47,6 +48,8 @@ class _EffektioState extends State<Effektio> {
   @override
   void initState() {
     super.initState();
+    stdout.writeln('main init state');
+    stderr.writeln('main init state');
   }
 
   @override

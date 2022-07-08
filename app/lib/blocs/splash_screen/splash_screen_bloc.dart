@@ -1,6 +1,7 @@
 // ignore_for_file: override_on_non_overriding_member
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -16,10 +17,13 @@ class SplashScreenBloc extends Bloc<SplashScreenEvent, SplashScreenState> {
     NavigateToHomeScreenEvent event,
     Emitter<SplashScreenState> emit,
   ) async {
+    stdout.writeln('splash loading');
     emit(Loading());
+    stdout.writeln('splash delayed');
     await Future.delayed(
       const Duration(seconds: 4),
     );
+    stdout.writeln('splash loaded');
     emit(Loaded());
   }
 }
