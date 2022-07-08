@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,24 +13,35 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A59933E72846860B0091F9A2 /* DKImagePickerController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933E62846860B0091F9A2 /* DKImagePickerController.framework */; };
+		A59933E92846860B0091F9A2 /* DKPhotoGallery.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933E82846860B0091F9A2 /* DKPhotoGallery.framework */; };
+		A59933EB2846860B0091F9A2 /* effektio_flutter_sdk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933EA2846860B0091F9A2 /* effektio_flutter_sdk.framework */; };
+		A59933ED2846860B0091F9A2 /* emoji_picker_flutter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933EC2846860B0091F9A2 /* emoji_picker_flutter.framework */; };
+		A59933EF2846860B0091F9A2 /* file_picker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933EE2846860B0091F9A2 /* file_picker.framework */; };
+		A59933F12846860B0091F9A2 /* flutter_inappwebview.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */; };
+		A59933F32846860B0091F9A2 /* flutter_keyboard_visibility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */; };
+		A59933F52846860B0091F9A2 /* fluttertoast.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F42846860B0091F9A2 /* fluttertoast.framework */; };
+		A59933F72846860B0091F9A2 /* FMDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F62846860B0091F9A2 /* FMDB.framework */; };
+		A59933F92846860B0091F9A2 /* image_picker_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F82846860B0091F9A2 /* image_picker_ios.framework */; };
+		A59933FB2846860B0091F9A2 /* integration_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933FA2846860B0091F9A2 /* integration_test.framework */; };
+		A59933FD2846860B0091F9A2 /* open_file.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933FC2846860B0091F9A2 /* open_file.framework */; };
+		A59933FF2846860B0091F9A2 /* OrderedSet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933FE2846860B0091F9A2 /* OrderedSet.framework */; };
+		A59934012846860B0091F9A2 /* path_provider_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934002846860B0091F9A2 /* path_provider_ios.framework */; };
+		A59934032846860B0091F9A2 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934022846860B0091F9A2 /* Pods_Runner.framework */; };
+		A59934052846860B0091F9A2 /* SDWebImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934042846860B0091F9A2 /* SDWebImage.framework */; };
+		A59934072846860B0091F9A2 /* shared_preferences_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934062846860B0091F9A2 /* shared_preferences_ios.framework */; };
+		A59934092846860B0091F9A2 /* sqflite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934082846860B0091F9A2 /* sqflite.framework */; };
+		A599340B2846860B0091F9A2 /* SwiftyGif.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340A2846860B0091F9A2 /* SwiftyGif.framework */; };
+		A599340D2846860B0091F9A2 /* Toast.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340C2846860B0091F9A2 /* Toast.framework */; };
+		A599340F2846860B0091F9A2 /* url_launcher_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340E2846860B0091F9A2 /* url_launcher_ios.framework */; };
+		BD56738C1EB61F7A8B956683 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		0AAD5F757E6F8122ADE5E01A /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		22C5F4BC23AE43072AFF29F9 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -42,6 +53,30 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A59933E028467EAD0091F9A2 /* effektio_flutter_sdk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = effektio_flutter_sdk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933E62846860B0091F9A2 /* DKImagePickerController.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DKImagePickerController.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933E82846860B0091F9A2 /* DKPhotoGallery.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DKPhotoGallery.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933EA2846860B0091F9A2 /* effektio_flutter_sdk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = effektio_flutter_sdk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933EC2846860B0091F9A2 /* emoji_picker_flutter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = emoji_picker_flutter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933EE2846860B0091F9A2 /* file_picker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = file_picker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_inappwebview.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_keyboard_visibility.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933F42846860B0091F9A2 /* fluttertoast.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = fluttertoast.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933F62846860B0091F9A2 /* FMDB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FMDB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933F82846860B0091F9A2 /* image_picker_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = image_picker_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933FA2846860B0091F9A2 /* integration_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = integration_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933FC2846860B0091F9A2 /* open_file.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = open_file.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59933FE2846860B0091F9A2 /* OrderedSet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OrderedSet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59934002846860B0091F9A2 /* path_provider_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = path_provider_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59934022846860B0091F9A2 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59934042846860B0091F9A2 /* SDWebImage.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SDWebImage.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59934062846860B0091F9A2 /* shared_preferences_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = shared_preferences_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A59934082846860B0091F9A2 /* sqflite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = sqflite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A599340A2846860B0091F9A2 /* SwiftyGif.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftyGif.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A599340C2846860B0091F9A2 /* Toast.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Toast.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A599340E2846860B0091F9A2 /* url_launcher_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = url_launcher_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC713902AEAEB45940F94F3A /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,12 +84,64 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A59933E72846860B0091F9A2 /* DKImagePickerController.framework in Frameworks */,
+				A59933E92846860B0091F9A2 /* DKPhotoGallery.framework in Frameworks */,
+				A59933EB2846860B0091F9A2 /* effektio_flutter_sdk.framework in Frameworks */,
+				A59933ED2846860B0091F9A2 /* emoji_picker_flutter.framework in Frameworks */,
+				A59933EF2846860B0091F9A2 /* file_picker.framework in Frameworks */,
+				A59933F12846860B0091F9A2 /* flutter_inappwebview.framework in Frameworks */,
+				A59933F32846860B0091F9A2 /* flutter_keyboard_visibility.framework in Frameworks */,
+				A59933F52846860B0091F9A2 /* fluttertoast.framework in Frameworks */,
+				A59933F72846860B0091F9A2 /* FMDB.framework in Frameworks */,
+				A59933F92846860B0091F9A2 /* image_picker_ios.framework in Frameworks */,
+				A59933FB2846860B0091F9A2 /* integration_test.framework in Frameworks */,
+				A59933FD2846860B0091F9A2 /* open_file.framework in Frameworks */,
+				A59933FF2846860B0091F9A2 /* OrderedSet.framework in Frameworks */,
+				A59934012846860B0091F9A2 /* path_provider_ios.framework in Frameworks */,
+				A59934032846860B0091F9A2 /* Pods_Runner.framework in Frameworks */,
+				A59934052846860B0091F9A2 /* SDWebImage.framework in Frameworks */,
+				A59934072846860B0091F9A2 /* shared_preferences_ios.framework in Frameworks */,
+				A59934092846860B0091F9A2 /* sqflite.framework in Frameworks */,
+				A599340B2846860B0091F9A2 /* SwiftyGif.framework in Frameworks */,
+				A599340D2846860B0091F9A2 /* Toast.framework in Frameworks */,
+				A599340F2846860B0091F9A2 /* url_launcher_ios.framework in Frameworks */,
+				BD56738C1EB61F7A8B956683 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06C25308E8CBF659FABAD756 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A59933E62846860B0091F9A2 /* DKImagePickerController.framework */,
+				A59933E82846860B0091F9A2 /* DKPhotoGallery.framework */,
+				A59933EA2846860B0091F9A2 /* effektio_flutter_sdk.framework */,
+				A59933EC2846860B0091F9A2 /* emoji_picker_flutter.framework */,
+				A59933EE2846860B0091F9A2 /* file_picker.framework */,
+				A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */,
+				A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */,
+				A59933F42846860B0091F9A2 /* fluttertoast.framework */,
+				A59933F62846860B0091F9A2 /* FMDB.framework */,
+				A59933F82846860B0091F9A2 /* image_picker_ios.framework */,
+				A59933FA2846860B0091F9A2 /* integration_test.framework */,
+				A59933FC2846860B0091F9A2 /* open_file.framework */,
+				A59933FE2846860B0091F9A2 /* OrderedSet.framework */,
+				A59934002846860B0091F9A2 /* path_provider_ios.framework */,
+				A59934022846860B0091F9A2 /* Pods_Runner.framework */,
+				A59934042846860B0091F9A2 /* SDWebImage.framework */,
+				A59934062846860B0091F9A2 /* shared_preferences_ios.framework */,
+				A59934082846860B0091F9A2 /* sqflite.framework */,
+				A599340A2846860B0091F9A2 /* SwiftyGif.framework */,
+				A599340C2846860B0091F9A2 /* Toast.framework */,
+				A599340E2846860B0091F9A2 /* url_launcher_ios.framework */,
+				A59933E028467EAD0091F9A2 /* effektio_flutter_sdk.framework */,
+				C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
 			isa = PBXGroup;
 			children = (
@@ -72,6 +159,8 @@
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
+				FB18AE2C5AB843A0D7824FF8 /* Pods */,
+				06C25308E8CBF659FABAD756 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -98,6 +187,16 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
+		FB18AE2C5AB843A0D7824FF8 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				22C5F4BC23AE43072AFF29F9 /* Pods-Runner.debug.xcconfig */,
+				0AAD5F757E6F8122ADE5E01A /* Pods-Runner.release.xcconfig */,
+				EC713902AEAEB45940F94F3A /* Pods-Runner.profile.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -105,12 +204,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
+				2F99E2EF36D92BF4D8C70B08 /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
-				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				05ABCF403D1D80A8999EFF9B /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -169,6 +269,45 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		05ABCF403D1D80A8999EFF9B /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2F99E2EF36D92BF4D8C70B08 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -181,7 +320,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin\n";
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -195,7 +334,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -293,6 +432,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Runner",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.effektio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -422,6 +565,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Runner",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.effektio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -443,6 +590,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Runner",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.effektio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
