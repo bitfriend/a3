@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "native/*",
+    "native/*",
 ]
 
 default-members = ["native/effektio"]
@@ -9,7 +9,6 @@ default-members = ["native/effektio"]
 lto = true
 panic = 'unwind'
 codegen-units = 1
-
 
 [profile.dev]
 lto = true

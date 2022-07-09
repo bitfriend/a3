@@ -20,7 +20,6 @@
 		A59933EF2846860B0091F9A2 /* file_picker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933EE2846860B0091F9A2 /* file_picker.framework */; };
 		A59933F12846860B0091F9A2 /* flutter_inappwebview.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */; };
 		A59933F32846860B0091F9A2 /* flutter_keyboard_visibility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */; };
-		A59933F52846860B0091F9A2 /* fluttertoast.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F42846860B0091F9A2 /* fluttertoast.framework */; };
 		A59933F72846860B0091F9A2 /* FMDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F62846860B0091F9A2 /* FMDB.framework */; };
 		A59933F92846860B0091F9A2 /* image_picker_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933F82846860B0091F9A2 /* image_picker_ios.framework */; };
 		A59933FB2846860B0091F9A2 /* integration_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59933FA2846860B0091F9A2 /* integration_test.framework */; };
@@ -32,7 +31,6 @@
 		A59934072846860B0091F9A2 /* shared_preferences_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934062846860B0091F9A2 /* shared_preferences_ios.framework */; };
 		A59934092846860B0091F9A2 /* sqflite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A59934082846860B0091F9A2 /* sqflite.framework */; };
 		A599340B2846860B0091F9A2 /* SwiftyGif.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340A2846860B0091F9A2 /* SwiftyGif.framework */; };
-		A599340D2846860B0091F9A2 /* Toast.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340C2846860B0091F9A2 /* Toast.framework */; };
 		A599340F2846860B0091F9A2 /* url_launcher_ios.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A599340E2846860B0091F9A2 /* url_launcher_ios.framework */; };
 		BD56738C1EB61F7A8B956683 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
@@ -61,7 +59,6 @@
 		A59933EE2846860B0091F9A2 /* file_picker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = file_picker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_inappwebview.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = flutter_keyboard_visibility.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A59933F42846860B0091F9A2 /* fluttertoast.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = fluttertoast.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59933F62846860B0091F9A2 /* FMDB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FMDB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59933F82846860B0091F9A2 /* image_picker_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = image_picker_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59933FA2846860B0091F9A2 /* integration_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = integration_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,7 +70,6 @@
 		A59934062846860B0091F9A2 /* shared_preferences_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = shared_preferences_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A59934082846860B0091F9A2 /* sqflite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = sqflite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A599340A2846860B0091F9A2 /* SwiftyGif.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftyGif.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A599340C2846860B0091F9A2 /* Toast.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Toast.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A599340E2846860B0091F9A2 /* url_launcher_ios.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = url_launcher_ios.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EC713902AEAEB45940F94F3A /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -91,7 +87,6 @@
 				A59933EF2846860B0091F9A2 /* file_picker.framework in Frameworks */,
 				A59933F12846860B0091F9A2 /* flutter_inappwebview.framework in Frameworks */,
 				A59933F32846860B0091F9A2 /* flutter_keyboard_visibility.framework in Frameworks */,
-				A59933F52846860B0091F9A2 /* fluttertoast.framework in Frameworks */,
 				A59933F72846860B0091F9A2 /* FMDB.framework in Frameworks */,
 				A59933F92846860B0091F9A2 /* image_picker_ios.framework in Frameworks */,
 				A59933FB2846860B0091F9A2 /* integration_test.framework in Frameworks */,
@@ -103,7 +98,6 @@
 				A59934072846860B0091F9A2 /* shared_preferences_ios.framework in Frameworks */,
 				A59934092846860B0091F9A2 /* sqflite.framework in Frameworks */,
 				A599340B2846860B0091F9A2 /* SwiftyGif.framework in Frameworks */,
-				A599340D2846860B0091F9A2 /* Toast.framework in Frameworks */,
 				A599340F2846860B0091F9A2 /* url_launcher_ios.framework in Frameworks */,
 				BD56738C1EB61F7A8B956683 /* Pods_Runner.framework in Frameworks */,
 			);
@@ -122,7 +116,6 @@
 				A59933EE2846860B0091F9A2 /* file_picker.framework */,
 				A59933F02846860B0091F9A2 /* flutter_inappwebview.framework */,
 				A59933F22846860B0091F9A2 /* flutter_keyboard_visibility.framework */,
-				A59933F42846860B0091F9A2 /* fluttertoast.framework */,
 				A59933F62846860B0091F9A2 /* FMDB.framework */,
 				A59933F82846860B0091F9A2 /* image_picker_ios.framework */,
 				A59933FA2846860B0091F9A2 /* integration_test.framework */,
@@ -134,7 +127,6 @@
 				A59934062846860B0091F9A2 /* shared_preferences_ios.framework */,
 				A59934082846860B0091F9A2 /* sqflite.framework */,
 				A599340A2846860B0091F9A2 /* SwiftyGif.framework */,
-				A599340C2846860B0091F9A2 /* Toast.framework */,
 				A599340E2846860B0091F9A2 /* url_launcher_ios.framework */,
 				A59933E028467EAD0091F9A2 /* effektio_flutter_sdk.framework */,
 				C4526011D7B07B78CDDBD531 /* Pods_Runner.framework */,
