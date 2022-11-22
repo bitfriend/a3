@@ -102,17 +102,20 @@ object RoomMessage {
     /// The User, who sent that event
     fn sender() -> string;
 
-    /// the body of the massage - fallback string reprensentation
-    fn body() -> string;
-
-    /// get html body
-    fn formatted_body() -> Option<string>;
-
     /// the server receiving timestamp in milliseconds
     fn origin_server_ts() -> Option<u64>;
 
+    /// whether decryption was failed
+    fn undecrypted() -> bool;
+
     /// the type of massage, like audio, text, image, file, etc
-    fn msgtype() -> string;
+    fn msgtype() -> Option<string>;
+
+    /// the body of the massage - fallback string reprensentation
+    fn body() -> Option<string>;
+
+    /// get html body
+    fn formatted_body() -> Option<string>;
 
     /// contains source data, name, mimetype, size, width and height
     fn image_description() -> Option<ImageDescription>;

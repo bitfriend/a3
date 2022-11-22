@@ -4513,6 +4513,37 @@ class Api {
       _RoomMessageSenderReturn Function(
     int,
   )>();
+  late final _roomMessageOriginServerTsPtr = _lookup<
+      ffi.NativeFunction<
+          _RoomMessageOriginServerTsReturn Function(
+    ffi.Int64,
+  )>>("__RoomMessage_origin_server_ts");
+
+  late final _roomMessageOriginServerTs =
+      _roomMessageOriginServerTsPtr.asFunction<
+          _RoomMessageOriginServerTsReturn Function(
+    int,
+  )>();
+  late final _roomMessageUndecryptedPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Uint8 Function(
+    ffi.Int64,
+  )>>("__RoomMessage_undecrypted");
+
+  late final _roomMessageUndecrypted = _roomMessageUndecryptedPtr.asFunction<
+      int Function(
+    int,
+  )>();
+  late final _roomMessageMsgtypePtr = _lookup<
+      ffi.NativeFunction<
+          _RoomMessageMsgtypeReturn Function(
+    ffi.Int64,
+  )>>("__RoomMessage_msgtype");
+
+  late final _roomMessageMsgtype = _roomMessageMsgtypePtr.asFunction<
+      _RoomMessageMsgtypeReturn Function(
+    int,
+  )>();
   late final _roomMessageBodyPtr = _lookup<
       ffi.NativeFunction<
           _RoomMessageBodyReturn Function(
@@ -4532,27 +4563,6 @@ class Api {
   late final _roomMessageFormattedBody =
       _roomMessageFormattedBodyPtr.asFunction<
           _RoomMessageFormattedBodyReturn Function(
-    int,
-  )>();
-  late final _roomMessageOriginServerTsPtr = _lookup<
-      ffi.NativeFunction<
-          _RoomMessageOriginServerTsReturn Function(
-    ffi.Int64,
-  )>>("__RoomMessage_origin_server_ts");
-
-  late final _roomMessageOriginServerTs =
-      _roomMessageOriginServerTsPtr.asFunction<
-          _RoomMessageOriginServerTsReturn Function(
-    int,
-  )>();
-  late final _roomMessageMsgtypePtr = _lookup<
-      ffi.NativeFunction<
-          _RoomMessageMsgtypeReturn Function(
-    ffi.Int64,
-  )>>("__RoomMessage_msgtype");
-
-  late final _roomMessageMsgtype = _roomMessageMsgtypePtr.asFunction<
-      _RoomMessageMsgtypeReturn Function(
     int,
   )>();
   late final _roomMessageImageDescriptionPtr = _lookup<
@@ -8471,8 +8481,60 @@ class RoomMessage {
     return tmp2;
   }
 
+  /// the server receiving timestamp in milliseconds
+  int? originServerTs() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._roomMessageOriginServerTs(
+      tmp0,
+    );
+    final tmp3 = tmp1.arg0;
+    final tmp4 = tmp1.arg1;
+    if (tmp3 == 0) {
+      return null;
+    }
+    final tmp2 = tmp4;
+    return tmp2;
+  }
+
+  /// whether decryption was failed
+  bool undecrypted() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._roomMessageUndecrypted(
+      tmp0,
+    );
+    final tmp3 = tmp1;
+    final tmp2 = tmp3 > 0;
+    return tmp2;
+  }
+
+  /// the type of massage, like audio, text, image, file, etc
+  String? msgtype() {
+    var tmp0 = 0;
+    tmp0 = _box.borrow();
+    final tmp1 = _api._roomMessageMsgtype(
+      tmp0,
+    );
+    final tmp3 = tmp1.arg0;
+    final tmp4 = tmp1.arg1;
+    final tmp5 = tmp1.arg2;
+    final tmp6 = tmp1.arg3;
+    if (tmp3 == 0) {
+      return null;
+    }
+    final ffi.Pointer<ffi.Uint8> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp2 = utf8.decode(tmp4_0.asTypedList(tmp5));
+    if (tmp6 > 0) {
+      final ffi.Pointer<ffi.Void> tmp4_0;
+      tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+      _api.__deallocate(tmp4_0, tmp6 * 1, 1);
+    }
+    return tmp2;
+  }
+
   /// the body of the massage - fallback string reprensentation
-  String body() {
+  String? body() {
     var tmp0 = 0;
     tmp0 = _box.borrow();
     final tmp1 = _api._roomMessageBody(
@@ -8481,12 +8543,16 @@ class RoomMessage {
     final tmp3 = tmp1.arg0;
     final tmp4 = tmp1.arg1;
     final tmp5 = tmp1.arg2;
-    final ffi.Pointer<ffi.Uint8> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
-    final tmp2 = utf8.decode(tmp3_0.asTypedList(tmp4));
-    if (tmp5 > 0) {
-      final ffi.Pointer<ffi.Void> tmp3_0;
-      tmp3_0 = ffi.Pointer.fromAddress(tmp3);
-      _api.__deallocate(tmp3_0, tmp5 * 1, 1);
+    final tmp6 = tmp1.arg3;
+    if (tmp3 == 0) {
+      return null;
+    }
+    final ffi.Pointer<ffi.Uint8> tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+    final tmp2 = utf8.decode(tmp4_0.asTypedList(tmp5));
+    if (tmp6 > 0) {
+      final ffi.Pointer<ffi.Void> tmp4_0;
+      tmp4_0 = ffi.Pointer.fromAddress(tmp4);
+      _api.__deallocate(tmp4_0, tmp6 * 1, 1);
     }
     return tmp2;
   }
@@ -8511,42 +8577,6 @@ class RoomMessage {
       final ffi.Pointer<ffi.Void> tmp4_0;
       tmp4_0 = ffi.Pointer.fromAddress(tmp4);
       _api.__deallocate(tmp4_0, tmp6 * 1, 1);
-    }
-    return tmp2;
-  }
-
-  /// the server receiving timestamp in milliseconds
-  int? originServerTs() {
-    var tmp0 = 0;
-    tmp0 = _box.borrow();
-    final tmp1 = _api._roomMessageOriginServerTs(
-      tmp0,
-    );
-    final tmp3 = tmp1.arg0;
-    final tmp4 = tmp1.arg1;
-    if (tmp3 == 0) {
-      return null;
-    }
-    final tmp2 = tmp4;
-    return tmp2;
-  }
-
-  /// the type of massage, like audio, text, image, file, etc
-  String msgtype() {
-    var tmp0 = 0;
-    tmp0 = _box.borrow();
-    final tmp1 = _api._roomMessageMsgtype(
-      tmp0,
-    );
-    final tmp3 = tmp1.arg0;
-    final tmp4 = tmp1.arg1;
-    final tmp5 = tmp1.arg2;
-    final ffi.Pointer<ffi.Uint8> tmp3_0 = ffi.Pointer.fromAddress(tmp3);
-    final tmp2 = utf8.decode(tmp3_0.asTypedList(tmp4));
-    if (tmp5 > 0) {
-      final ffi.Pointer<ffi.Void> tmp3_0;
-      tmp3_0 = ffi.Pointer.fromAddress(tmp3);
-      _api.__deallocate(tmp3_0, tmp5 * 1, 1);
     }
     return tmp2;
   }
@@ -11769,13 +11799,33 @@ class _RoomMessageSenderReturn extends ffi.Struct {
   external int arg2;
 }
 
-class _RoomMessageBodyReturn extends ffi.Struct {
-  @ffi.Int64()
+class _RoomMessageOriginServerTsReturn extends ffi.Struct {
+  @ffi.Uint8()
   external int arg0;
   @ffi.Uint64()
   external int arg1;
+}
+
+class _RoomMessageMsgtypeReturn extends ffi.Struct {
+  @ffi.Uint8()
+  external int arg0;
+  @ffi.Int64()
+  external int arg1;
   @ffi.Uint64()
   external int arg2;
+  @ffi.Uint64()
+  external int arg3;
+}
+
+class _RoomMessageBodyReturn extends ffi.Struct {
+  @ffi.Uint8()
+  external int arg0;
+  @ffi.Int64()
+  external int arg1;
+  @ffi.Uint64()
+  external int arg2;
+  @ffi.Uint64()
+  external int arg3;
 }
 
 class _RoomMessageFormattedBodyReturn extends ffi.Struct {
@@ -11787,22 +11837,6 @@ class _RoomMessageFormattedBodyReturn extends ffi.Struct {
   external int arg2;
   @ffi.Uint64()
   external int arg3;
-}
-
-class _RoomMessageOriginServerTsReturn extends ffi.Struct {
-  @ffi.Uint8()
-  external int arg0;
-  @ffi.Uint64()
-  external int arg1;
-}
-
-class _RoomMessageMsgtypeReturn extends ffi.Struct {
-  @ffi.Int64()
-  external int arg0;
-  @ffi.Uint64()
-  external int arg1;
-  @ffi.Uint64()
-  external int arg2;
 }
 
 class _RoomMessageImageDescriptionReturn extends ffi.Struct {

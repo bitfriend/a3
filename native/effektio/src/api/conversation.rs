@@ -69,7 +69,7 @@ impl Conversation {
     }
 
     fn set_latest_message(&mut self, mut msg: RoomMessage) {
-        if msg.is_reply() {
+        if msg.replying() == Some(true) {
             msg.simplify_body();
         }
         self.latest_message = Some(msg);

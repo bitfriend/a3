@@ -130,7 +130,7 @@ class _ChatListItemState extends State<ChatListItem> {
       return const SizedBox();
     }
     String sender = widget.latestMessage!.sender();
-    String body = widget.latestMessage!.body();
+    String? body = widget.latestMessage!.body();
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       child: ParsedText(

@@ -151,17 +151,17 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Widget textMessageBuilder(
-    types.TextMessage p1, {
+    types.TextMessage message, {
     required int messageWidth,
     required bool showName,
   }) {
     return Container(
-      width: sqrt(p1.metadata!['messageLength']) * 38.5,
+      width: sqrt(message.metadata!['messageLength']) * 38.5,
       padding: const EdgeInsets.all(8),
       constraints: const BoxConstraints(minWidth: 57),
       child: Html(
         // ignore: prefer_single_quotes, unnecessary_string_interpolations
-        data: """${p1.text}""",
+        data: """${message.text}""",
         style: {
           'body': Style(color: Colors.white),
           'a': Style(textDecoration: TextDecoration.none)
@@ -171,15 +171,15 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Widget imageMessageBuilder(
-    types.ImageMessage imageMessage, {
+    types.ImageMessage message, {
     required int messageWidth,
   }) {
-    if (imageMessage.uri.isEmpty) {
+    if (message.uri.isEmpty) {
       // binary data
-      if (imageMessage.metadata?.containsKey('binary') ?? false) {
+      if (message.metadata?.containsKey('binary') ?? false) {
         return CachedMemoryImage(
-          uniqueKey: imageMessage.id,
-          bytes: imageMessage.metadata?['binary'],
+          uniqueKey: message.id,
+          bytes: message.metadata?['binary'],
           width: messageWidth.toDouble(),
           placeholder: const CircularProgressIndicator(
             color: AppCommonTheme.primaryColor,
@@ -187,15 +187,15 @@ class _ChatScreenState extends State<ChatScreen>
         );
       }
       return CachedMemoryImage(
-        uniqueKey: imageMessage.id,
+        uniqueKey: message.id,
         bytes: kTransparentImage,
         width: messageWidth.toDouble(),
       );
     }
-    if (isURL(imageMessage.uri)) {
+    if (isURL(message.uri)) {
       // remote url
       return CachedNetworkImage(
-        imageUrl: imageMessage.uri,
+        imageUrl: message.uri,
         width: messageWidth.toDouble(),
         errorWidget: (context, url, error) => const Text(
           'Could not load image',
@@ -205,12 +205,26 @@ class _ChatScreenState extends State<ChatScreen>
     // local path
     // the image that just sent is displayed from local not remote
     return Image.file(
-      File(imageMessage.uri),
+      File(message.uri),
       width: messageWidth.toDouble(),
       errorBuilder: (context, error, stackTrace) => const Text(
         'Could not load image',
       ),
     );
+  }
+
+  Widget customMessageBuilder(
+    types.CustomMessage message, {
+    required int messageWidth,
+  }) {
+    if (message.metadata?['undecrypted'] == true) {
+      return CachedMemoryImage(
+        uniqueKey: message.id,
+        bytes: kTransparentImage,
+        width: messageWidth.toDouble(),
+      );
+    }
+    return const SizedBox();
   }
 
   @override
@@ -378,6 +392,7 @@ class _ChatScreenState extends State<ChatScreen>
               avatarBuilder: avatarBuilder,
               bubbleBuilder: bubbleBuilder,
               imageMessageBuilder: imageMessageBuilder,
+              customMessageBuilder: customMessageBuilder,
               showUserAvatars: true,
               onAttachmentPressed: () => handleAttachmentPressed(context),
               onAvatarTap: (types.User user) {

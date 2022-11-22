@@ -91,77 +91,80 @@ impl TimelineStream {
         let room = self.room.clone();
 
         let mut stream = timeline.signal().to_stream();
-        stream.map(move |diff| match diff {
-            VecDiff::Replace { values } => TimelineDiff {
-                action: "Replace".to_string(),
-                values: values
-                    .iter()
-                    .map(|x| timeline_item_to_message(x.clone(), room.clone()))
-                    .collect(),
-                index: None,
-                value: None,
-                new_index: None,
-                old_index: None,
-            },
-            VecDiff::InsertAt { index, value } => TimelineDiff {
-                action: "InsertAt".to_string(),
-                values: None,
-                index: Some(index),
-                value: timeline_item_to_message(value, room.clone()),
-                new_index: None,
-                old_index: None,
-            },
-            VecDiff::UpdateAt { index, value } => TimelineDiff {
-                action: "UpdateAt".to_string(),
-                values: None,
-                index: Some(index),
-                value: timeline_item_to_message(value, room.clone()),
-                new_index: None,
-                old_index: None,
-            },
-            VecDiff::Push { value } => TimelineDiff {
-                action: "Push".to_string(),
-                values: None,
-                index: None,
-                value: timeline_item_to_message(value, room.clone()),
-                new_index: None,
-                old_index: None,
-            },
-            VecDiff::RemoveAt { index } => TimelineDiff {
-                action: "RemoveAt".to_string(),
-                values: None,
-                index: Some(index),
-                value: None,
-                new_index: None,
-                old_index: None,
-            },
-            VecDiff::Move {
-                old_index,
-                new_index,
-            } => TimelineDiff {
-                action: "Move".to_string(),
-                values: None,
-                index: None,
-                value: None,
-                old_index: Some(old_index),
-                new_index: Some(new_index),
-            },
-            VecDiff::Pop {} => TimelineDiff {
-                action: "Pop".to_string(),
-                values: None,
-                index: None,
-                value: None,
-                old_index: None,
-                new_index: None,
-            },
-            VecDiff::Clear {} => TimelineDiff {
-                action: "Clear".to_string(),
-                values: None,
-                index: None,
-                value: None,
-                old_index: None,
-                new_index: None,
-            },
+        stream.map(move |diff| {
+            info!("timeline diff: {:?}", diff);
+            match diff {
+                VecDiff::Replace { values } => TimelineDiff {
+                    action: "Replace".to_string(),
+                    values: values
+                        .iter()
+                        .map(|x| timeline_item_to_message(x.clone(), room.clone()))
+                        .collect(),
+                    index: None,
+                    value: None,
+                    new_index: None,
+                    old_index: None,
+                },
+                VecDiff::InsertAt { index, value } => TimelineDiff {
+                    action: "InsertAt".to_string(),
+                    values: None,
+                    index: Some(index),
+                    value: timeline_item_to_message(value, room.clone()),
+                    new_index: None,
+                    old_index: None,
+                },
+                VecDiff::UpdateAt { index, value } => TimelineDiff {
+                    action: "UpdateAt".to_string(),
+                    values: None,
+                    index: Some(index),
+                    value: timeline_item_to_message(value, room.clone()),
+                    new_index: None,
+                    old_index: None,
+                },
+                VecDiff::Push { value } => TimelineDiff {
+                    action: "Push".to_string(),
+                    values: None,
+                    index: None,
+                    value: timeline_item_to_message(value, room.clone()),
+                    new_index: None,
+                    old_index: None,
+                },
+                VecDiff::RemoveAt { index } => TimelineDiff {
+                    action: "RemoveAt".to_string(),
+                    values: None,
+                    index: Some(index),
+                    value: None,
+                    new_index: None,
+                    old_index: None,
+                },
+                VecDiff::Move {
+                    old_index,
+                    new_index,
+                } => TimelineDiff {
+                    action: "Move".to_string(),
+                    values: None,
+                    index: None,
+                    value: None,
+                    old_index: Some(old_index),
+                    new_index: Some(new_index),
+                },
+                VecDiff::Pop {} => TimelineDiff {
+                    action: "Pop".to_string(),
+                    values: None,
+                    index: None,
+                    value: None,
+                    old_index: None,
+                    new_index: None,
+                },
+                VecDiff::Clear {} => TimelineDiff {
+                    action: "Clear".to_string(),
+                    values: None,
+                    index: None,
+                    value: None,
+                    old_index: None,
+                    new_index: None,
+                },
+            }
         })
     }
 

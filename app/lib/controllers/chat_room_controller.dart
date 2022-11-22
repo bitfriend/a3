@@ -146,7 +146,7 @@ class ChatRoomController extends GetxController {
             int index = event.index()!;
             RoomMessage? value = event.value();
             if (value == null) {
-              break; // message decryption may be failed
+              break; // timeline item may be not event
             }
             types.Message? m = _prepareMessage(value);
             if (m != null) {
@@ -163,7 +163,7 @@ class ChatRoomController extends GetxController {
             int index = event.index()!;
             RoomMessage? value = event.value();
             if (value == null) {
-              break; // message decryption may be failed
+              break; // timeline item may be not event
             }
             types.Message? m = _prepareMessage(value);
             if (m != null) {
@@ -179,7 +179,7 @@ class ChatRoomController extends GetxController {
           case 'Push':
             RoomMessage? value = event.value();
             if (value == null) {
-              break; // message decryption may be failed
+              break; // timeline item may be not event
             }
             types.Message? m = _prepareMessage(value);
             if (m != null) {
@@ -187,8 +187,6 @@ class ChatRoomController extends GetxController {
               if (isLoading.isFalse) {
                 update(['Chat']);
               }
-              String msgType = value.msgtype();
-              debugPrint('msgType - $msgType');
               if (value.msgtype() == 'm.image') {
                 _fetchMessageContent(m.id);
               }
@@ -523,11 +521,24 @@ class ChatRoomController extends GetxController {
   }
 
   types.Message? _prepareMessage(RoomMessage message) {
-    String msgtype = message.msgtype();
     String sender = message.sender();
     var author = types.User(id: sender, firstName: simplifyUserId(sender));
     int? createdAt = message.originServerTs(); // in milliseconds
     String eventId = message.eventId();
+
+    if (message.undecrypted()) {
+      // message decryption may be failed
+      return types.CustomMessage(
+        author: author,
+        createdAt: createdAt,
+        id: eventId,
+        metadata: const {
+          'undecrypted': true,
+        },
+      );
+    }
+
+    String msgtype = message.msgtype()!;
 
     if (msgtype == 'm.audio') {
     } else if (msgtype == 'm.emote') {
@@ -561,15 +572,29 @@ class ChatRoomController extends GetxController {
     } else if (msgtype == 'm.notice') {
     } else if (msgtype == 'm.server_notice') {
     } else if (msgtype == 'm.text') {
-      return types.TextMessage(
-        author: author,
-        createdAt: createdAt,
-        id: eventId,
-        text: message.formattedBody() ?? message.body(),
-        metadata: {
-          'messageLength': message.body().length,
-        },
-      );
+      String? formattedBody = message.formattedBody();
+      if (formattedBody == null) {
+        String body = message.body()!;
+        return types.TextMessage(
+          author: author,
+          createdAt: createdAt,
+          id: eventId,
+          text: body,
+          metadata: {
+            'messageLength': body.length,
+          },
+        );
+      } else {
+        return types.TextMessage(
+          author: author,
+          createdAt: createdAt,
+          id: eventId,
+          text: formattedBody,
+          metadata: {
+            'messageLength': formattedBody.length,
+          },
+        );
+      }
     } else if (msgtype == 'm.video') {
     } else if (msgtype == 'm.key.verification.request') {}
     return null;
