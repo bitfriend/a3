@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:effektio/common/store/themes/AppTheme.dart';
 import 'package:effektio/common/store/themes/SeperatedThemes.dart';
@@ -37,6 +38,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_icons_null_safety/flutter_icons_null_safety.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:themed/themed.dart';
+import 'package:window_size/window_size.dart';
 
 void main() async {
   await startApp();
@@ -44,6 +46,10 @@ void main() async {
 
 Future<void> startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
+  bool isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+  if (isDesktop) {
+    setWindowTitle('Effektio');
+  }
   GoogleFonts.config.allowRuntimeFetching = false;
   LicenseRegistry.addLicense(() async* {
     final license = await rootBundle.loadString('google_fonts/LICENSE.txt');
