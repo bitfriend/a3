@@ -141,7 +141,7 @@ impl ConversationController {
     }
 
     pub fn add_event_handler(&mut self, client: &MatrixClient) {
-        info!("sync room message event handler");
+        info!("convo controller event handler");
         let me = self.clone();
 
         client.add_event_handler_context(me.clone());
@@ -293,6 +293,7 @@ impl ConversationController {
         room: &MatrixRoom,
         client: &MatrixClient,
     ) {
+        info!("original sync room member event: {:?}", ev);
         // filter only event for me
         let user_id = client.user_id().expect("You seem to be not logged in");
         if ev.state_key != *user_id {

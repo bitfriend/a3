@@ -2826,7 +2826,6 @@ impl RoomMessage {
                 )
             }
             TimelineItemContent::RedactedMessage => {
-                info!("Edit event applies to a redacted message, discarding");
                 RoomEventItem::new(
                     event_id,
                     sender,
@@ -2869,7 +2868,6 @@ impl RoomMessage {
                 )
             }
             TimelineItemContent::UnableToDecrypt(encrypted_msg) => {
-                info!("Edit event applies to event that couldn't be decrypted, discarding");
                 RoomEventItem::new(
                     event_id,
                     sender,
@@ -2886,7 +2884,6 @@ impl RoomMessage {
                 )
             }
             TimelineItemContent::RoomMember(m) => {
-                info!("Edit event applies to a state event, discarding");
                 let fallback = match m.membership_change() {
                     Some(MembershipChange::None) => {
                         format!("{} not changed", m.user_id())
@@ -2965,14 +2962,18 @@ impl RoomMessage {
                 )
             }
             TimelineItemContent::OtherState(s) => {
-                info!("Edit event applies to a state event, discarding");
+                let state_key = s.state_key().to_string();
+                let text_desc = TextDesc {
+                    body: format!("changed {state_key}"),
+                    formatted_body: None,
+                };
                 RoomEventItem::new(
                     event_id,
                     sender,
                     origin_server_ts,
                     s.content().event_type().to_string(),
                     None,
-                    None,
+                    Some(text_desc),
                     None,
                     None,
                     None,
@@ -2982,14 +2983,17 @@ impl RoomMessage {
                 )
             }
             TimelineItemContent::FailedToParseMessageLike { event_type, error } => {
-                info!("Edit event applies to message that couldn't be parsed, discarding");
+                let text_desc = TextDesc {
+                    body: (*error).to_string(),
+                    formatted_body: None,
+                };
                 RoomEventItem::new(
                     event_id,
                     sender,
                     origin_server_ts,
                     event_type.to_string(),
                     None,
-                    None,
+                    Some(text_desc),
                     None,
                     None,
                     None,
@@ -3003,14 +3007,17 @@ impl RoomMessage {
                 state_key,
                 error,
             } => {
-                info!("Edit event applies to state that couldn't be parsed, discarding");
+                let text_desc = TextDesc {
+                    body: format!("{} about {}", (*error).to_string(), state_key.clone()),
+                    formatted_body: None,
+                };
                 RoomEventItem::new(
                     event_id,
                     sender,
                     origin_server_ts,
                     event_type.to_string(),
                     None,
-                    None,
+                    Some(text_desc),
                     None,
                     None,
                     None,
