@@ -1,20 +1,21 @@
 import 'package:acter/common/providers/common_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter_avatar/acter_avatar.dart';
+import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
-import 'package:acter_avatar/acter_avatar.dart';
 
 class MemberAvatar extends ConsumerWidget {
   final Member member;
 
-  const MemberAvatar({super.key, required this.member});
+  MemberAvatar({Key? key, required this.member}) : super(key: key) {}
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(memberProfileProvider(member));
     return profile.when(
       data: (data) {
+        final userId = member.userId(); // make temporary variable
         return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -27,7 +28,7 @@ class MemberAvatar extends ConsumerWidget {
               ),
               child: ActerAvatar(
                 mode: DisplayMode.User,
-                uniqueId: member.userId().toString(),
+                uniqueId: userId.toString(),
                 size: 20,
                 avatar: data.getAvatarImage(),
                 displayName: data.displayName,

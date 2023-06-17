@@ -63,7 +63,10 @@ impl Member {
     }
 
     pub fn user_id(&self) -> OwnedUserId {
-        self.member.user_id().to_owned()
+        info!("member user_id");
+        let user_id = self.member.user_id();
+        info!("member user_id: {:?}", user_id.to_string());
+        user_id.to_owned()
     }
 }
 
@@ -96,7 +99,7 @@ impl Room {
                     .into_iter()
                     .map(|member| Member {
                         client: client.clone(),
-                        member,
+                        member: member.clone(),
                     })
                     .collect();
                 Ok(members)
@@ -117,7 +120,7 @@ impl Room {
                     .into_iter()
                     .map(|member| Member {
                         client: client.clone(),
-                        member,
+                        member: member.clone(),
                     })
                     .collect();
                 Ok(members)
