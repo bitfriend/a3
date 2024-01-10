@@ -1,0 +1,176 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Declares a function for converting a `TypeEq&lt;L, R&gt;` to `TypeEq&lt;Foo&lt;L&gt;, Foo&lt;R&gt;&gt;`."><title>type_eq_projection_fn in konst::polymorphism - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-63a85fc7cf22dee2.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="konst" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (696aaad58 2023-04-09)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-1159a395118aa44e.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../konst/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../konst/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><div class="sidebar-elems"><h2><a href="index.html">In konst::polymorphism</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Macro <a href="../index.html">konst</a>::<wbr><a href="index.html">polymorphism</a>::<wbr><a class="macro" href="#">type_eq_projection_fn</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../../src/konst_kernel/type_eq/make_project_fn.rs.html#2">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><span class="macro">macro_rules! </span>type_eq_projection_fn {
+    (
+        $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)*
+        <span class="macro-nonterminal">$vis</span>:vis
+        $(<span class="kw">const </span>$(@<span class="macro-nonterminal">$is_const</span>:ident@)<span class="question-mark">?</span>)<span class="question-mark">?
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$function</span>:ident
+        (
+            $(<span class="macro-nonterminal">$type_param</span>:ident)<span class="question-mark">?
+            </span>$(, <span class="macro-nonterminal">$param</span>:ident $(@<span class="macro-nonterminal">$L_R_from_ctx</span>:ident@)<span class="question-mark">?</span>: TypeEq&lt;<span class="macro-nonterminal">$L</span>:ident, <span class="macro-nonterminal">$R</span>:ident&gt;)<span class="question-mark">?
+        </span>)
+        -&gt;
+        $(:: $(@<span class="macro-nonterminal">$c2</span>:ident@)<span class="question-mark">?</span>)<span class="question-mark">? </span>$(<span class="macro-nonterminal">$type_name</span>:ident)::* &lt;
+        $(<span class="macro-nonterminal">$gen_params</span>:tt)*
+    ) =&gt; { ... };
+}</pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Declares a function for converting a <code>TypeEq&lt;L, R&gt;</code>
+to <code>TypeEq&lt;Foo&lt;L&gt;, Foo&lt;R&gt;&gt;</code>.</p>
+<p>As an alternative to this macro, you can look at <a href="../../typewit/type_eq/type_eq_/struct.TypeEq.html#method.project" title="method typewit::type_eq::type_eq_::TypeEq::project"><code>TypeEq::project</code></a> and <a href="../../typewit/type_eq/type_eq_/struct.TypeEq.html#method.map" title="method typewit::type_eq::type_eq_::TypeEq::map"><code>TypeEq::map</code></a></p>
+<p><a href="#examples"><strong>examples below</strong></a></p>
+<p><a href="#syntax"><strong>syntax example</strong></a></p>
+<h2 id="limitations"><a href="#limitations">Limitations</a></h2>
+<p>This macro has the following limitations:</p>
+<ul>
+<li>
+<p>It only accepts module paths for a type,
+followed by the generic parameters of that type,
+no concrete generic arguments are allowed.</p>
+</li>
+<li>
+<p>It can only map one type parameter, the <code>T</code> parameter.</p>
+</li>
+<li>
+<p>It cannot parse trait bounds in the type parameter list written 
+the normal way, they must be wrapped in parentheses.</p>
+</li>
+<li>
+<p>The <code>T</code> type parameter can only be bounded in the parameter list</p>
+</li>
+<li>
+<p>The <code>T</code> type parameter cannot appear in any trait bounds.</p>
+</li>
+</ul>
+<p>The first two limitations can be worked around by passing a type alias
+to the macro.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2><h4 id="basic"><a href="#basic">Basic</a></h4>
+<p>This example shows what the macro does,
+the <a href="#motivating-example">motivating example</a> shows why one would use it.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>konst::polymorphism::{TypeEq,  type_eq_projection_fn};
+ 
+<span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">struct </span>Foo&lt;T, <span class="kw">const </span>N: usize&gt;([T; N]);
+ 
+<span class="comment">// This macro invocation generates:
+// const fn project_to_foo&lt;L, R, const N: usize&gt;(
+//     _: TypeEq&lt;L, R&gt;,
+// ) -&gt; TypeEq&lt;Foo&lt;L, N&gt;, Foo&lt;R, N&gt;&gt;
+</span><span class="macro">type_eq_projection_fn!</span>{
+    <span class="comment">// `T` must be both the function parameter, and in the return type.
+    </span><span class="kw">const fn </span>project_to_foo(T) -&gt; Foo&lt;T, <span class="kw">const </span>N: usize&gt;
+}
+ 
+<span class="comment">// a toy example to demonstrate what projecting a TypeEq does
+</span><span class="kw">const fn </span>get_foo&lt;<span class="lifetime">&#39;a</span>, R&gt;(te: TypeEq&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, R&gt;) -&gt; Foo&lt;R, <span class="number">2</span>&gt; {
+    <span class="comment">// The type annotation is for the reader
+    </span><span class="kw">let </span>te: TypeEq&lt;Foo&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, <span class="number">2</span>&gt;, Foo&lt;R, <span class="number">2</span>&gt;&gt; =
+        project_to_foo::&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, R, <span class="number">2</span>&gt;(te);
+ 
+    te.to_right(Foo([<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;bar&quot;</span>]))
+}
+ 
+<span class="macro">assert_eq!</span>(get_foo(TypeEq::NEW), Foo([<span class="string">&quot;foo&quot;</span>, <span class="string">&quot;bar&quot;</span>]));
+ </code></pre></div>
+<h4 id="motivating-example"><a href="#motivating-example">Motivating example</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>konst::polymorphism::{
+    HasTypeWitness,
+    MakeTypeWitness,
+    TypeEq, 
+    TypeWitnessTypeArg,
+    type_eq_projection_fn,
+};
+ 
+<span class="kw">fn </span>main() {
+    <span class="macro">assert_eq!</span>(Foo(<span class="number">3</span>, <span class="bool-val">false</span>).transform(), Foo(<span class="number">13</span>, <span class="bool-val">false</span>));
+    <span class="macro">assert_eq!</span>(Foo(<span class="string">&quot;hello&quot;</span>, <span class="string">&quot;world&quot;</span>).transform(), Foo(<span class="string">&quot;mapped&quot;</span>, <span class="string">&quot;world&quot;</span>));
+}
+ 
+<span class="attr">#[derive(Debug, PartialEq)]
+</span><span class="kw">struct </span>Foo&lt;T, U: Copy&gt;(T, U);
+ 
+<span class="comment">// This macro invocation generates:
+// const fn project_to_foo&lt;L, R, U&gt;(
+//     _: TypeEq&lt;L, R&gt;,
+// ) -&gt; TypeEq&lt;Foo&lt;L, U&gt;, Foo&lt;R, U&gt;&gt;
+</span><span class="macro">type_eq_projection_fn!</span>{
+    <span class="comment">// The `Copy` bound needs to be wrapped in parentheses in `U: (Copy)` to
+    // simplify parsing of trait bounds in the generic parameter list.
+    // 
+    // note: trait bounds are written normally in where clauses,
+    //       they must be unparenthesized.
+    </span><span class="kw">const fn </span>project_to_foo(T) -&gt; Foo&lt;T, U: (Copy)&gt;
+}
+ 
+<span class="kw">impl</span>&lt;T, U: Copy&gt; Foo&lt;T, U&gt; {
+    <span class="kw">const fn </span>transform&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="self">self</span>) -&gt; Foo&lt;T, U&gt;
+    <span class="kw">where
+        </span>T: Copy + HasTypeWitness&lt;TheWitness&lt;<span class="lifetime">&#39;a</span>, T&gt;&gt;,
+    {
+        <span class="kw">match </span>T::WITNESS {
+            TheWitness::U8(te) =&gt; {
+                <span class="comment">// the type annotation is just for the reader
+                </span><span class="kw">let </span>te: TypeEq&lt;Foo&lt;T, U&gt;, Foo&lt;u8, U&gt;&gt; = project_to_foo(te);
+                <span class="kw">let </span>bar: Foo&lt;u8, U&gt; = te.to_right(<span class="self">self</span>);
+
+                te.to_left(Foo(bar.<span class="number">0 </span>+ <span class="number">10</span>, bar.<span class="number">1</span>))
+            }
+            TheWitness::Str(te) =&gt; {
+                <span class="comment">// the type annotation is just for the reader
+                </span><span class="kw">let </span>te: TypeEq&lt;Foo&lt;T, U&gt;, Foo&lt;<span class="kw-2">&amp;</span>str, U&gt;&gt; = project_to_foo(te);
+                te.to_left(Foo(<span class="string">&quot;mapped&quot;</span>, <span class="self">self</span>.<span class="number">1</span>))
+            }
+        }
+    }
+}
+ 
+<span class="comment">// A type witness, a pattern documented in `konst::docs::type_witnesses`
+//
+// Simply put, type witnesses emulate matching over a range of types
+// (not values of those types, the types themselves).
+</span><span class="kw">enum </span>TheWitness&lt;<span class="lifetime">&#39;a</span>, T&gt; {
+    U8(TypeEq&lt;T, u8&gt;),
+    Str(TypeEq&lt;T, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt;),
+}
+ 
+<span class="kw">impl</span>&lt;T&gt; TypeWitnessTypeArg <span class="kw">for </span>TheWitness&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+    <span class="kw">type </span>Arg = T;
+}
+ 
+<span class="kw">impl </span>MakeTypeWitness <span class="kw">for </span>TheWitness&lt;<span class="lifetime">&#39;_</span>, u8&gt; {
+    <span class="kw">const </span>MAKE: <span class="self">Self </span>= <span class="self">Self</span>::U8(TypeEq::NEW);
+}
+ 
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MakeTypeWitness <span class="kw">for </span>TheWitness&lt;<span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt; {
+    <span class="kw">const </span>MAKE: <span class="self">Self </span>= <span class="self">Self</span>::Str(TypeEq::NEW);
+}
+ </code></pre></div>
+<h4 id="syntax"><a href="#syntax">Syntax</a></h4>
+<p>This example demonstrates all the syntax that this macro supports.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// This macro invocation generates this function:
+// 
+// pub const fn project&lt;&#39;a, &#39;b, L, R, const N: usize&gt;(
+//     _: TypeEq&lt;L, R&gt;
+// ) -&gt; TypeEq&lt;::foo::Ty&lt;&#39;a, &#39;b, L, N&gt;, ::foo::Ty&lt;&#39;a, &#39;b, R, N&gt;&gt;
+// where
+//     &#39;b: &#39;a,
+//     L: &#39;b + Debug,
+//     R: &#39;b + Debug,
+//     [u32; N]: &#39;a + core::fmt::Debug
+</span><span class="macro">type_eq_projection_fn!</span>{
+    <span class="doccomment">/// Documentation for the generated function
+    </span><span class="comment">// 
+    // Without the `const` qualifier, the generated function is non-`const`.
+    // 
+    // `T` must be both the function parameter, and in the return type.
+    </span><span class="kw">pub const fn </span>project(T) -&gt; ::foo::Ty&lt;
+        <span class="lifetime">&#39;a</span>,
+        <span class="lifetime">&#39;b</span>: <span class="lifetime">&#39;a</span>,
+        <span class="comment">// trait bounds in the type parameter list must be parenthesized
+        </span>T: (<span class="lifetime">&#39;b </span>+  Debug), 
+        <span class="kw">const </span>N: usize,
+    &gt;
+    <span class="kw">where
+        </span><span class="comment">// trait bounds in the where clause are unparenthesized
+        </span>[u32; N]: <span class="lifetime">&#39;a </span>+ core::fmt::Debug,
+}</code></pre></div>
+</div></details></section></div></main></body></html>

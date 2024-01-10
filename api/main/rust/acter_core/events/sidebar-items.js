@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AnyActerEvent","BrandIcon","Icon","Position","RefDetails"],"mod":["attachments","calendar","comments","news","pins","rsvp","settings","tasks","three_pid"],"struct":["BelongsTo","Color","Colorize","Labels","ObjRef","Reference","References","Update"],"type":["UtcDateTime"]};

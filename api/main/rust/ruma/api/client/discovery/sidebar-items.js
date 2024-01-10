@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["discover_homeserver","get_capabilities","get_supported_versions"]};

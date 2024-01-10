@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["DebugInvitedRoom","DebugListOfRawEventsNoId","DebugNotificationMap","DebugRawEvent","DebugRawEventNoId"],"trait":["DebugStructExt"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["DefaultAggregationSelector","DefaultTemporalitySelector"],"trait":["AggregationSelector","MetricProducer","MetricReader","TemporalitySelector"]};

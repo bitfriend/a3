@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RoomUpdate"],"struct":["JoinedRoom","LeftRoom","Rooms","SyncResponse","Timeline","UnreadNotificationsCount"]};

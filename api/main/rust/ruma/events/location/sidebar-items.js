@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AssetType","ZoomLevelError"],"struct":["AssetContent","LocationContent","LocationEventContent","LocationEventContentWithoutRelation","RedactedLocationEventContent","ZoomLevel"],"type":["LocationEvent","OriginalLocationEvent","OriginalSyncLocationEvent","RedactedLocationEvent","RedactedSyncLocationEvent","SyncLocationEvent"]};

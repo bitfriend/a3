@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["futures"],"struct":["Invite","Messages","MessagesOptions","Receipts","Room","RoomMember"]};

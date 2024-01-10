@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Gets a type witness for `Self`."><title>HasTypeWitness in konst_kernel::type_eq - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-63a85fc7cf22dee2.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="konst_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (696aaad58 2023-04-09)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-1159a395118aa44e.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../konst_kernel/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../konst_kernel/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">HasTypeWitness</a></h2><div class="sidebar-elems"><section><h3><a href="#required-associated-consts">Required Associated Constants</a></h3><ul class="block"><li><a href="#associatedconstant.WITNESS">WITNESS</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In konst_kernel::type_eq</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="../index.html">konst_kernel</a>::<wbr><a href="index.html">type_eq</a>::<wbr><a class="trait" href="#">HasTypeWitness</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../../src/typewit/type_witness_traits.rs.html#97">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait HasTypeWitness&lt;W&gt;<span class="where fmt-newline">where
+    W: <a class="trait" href="trait.TypeWitnessTypeArg.html" title="trait konst_kernel::type_eq::TypeWitnessTypeArg">TypeWitnessTypeArg</a>&lt;Arg = Self&gt;,</span>{
+    const <a href="#associatedconstant.WITNESS" class="constant">WITNESS</a>: W;
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Gets a <a href="../../typewit/index.html#what-are-type-witnesses" title="mod typewit">type witness</a> for <code>Self</code>.</p>
+<p>A <a href="../../typewit/index.html#what-are-type-witnesses" title="mod typewit">type witness</a> is an enum whose variants only have <a href="struct.TypeEq.html" title="struct konst_kernel::type_eq::TypeEq"><code>TypeEq</code></a> fields.
+Each variant requires the enum’s type parameter to be a specific type.</p>
+<p>This trait is a helper to write <a href="trait.MakeTypeWitness.html" title="trait konst_kernel::type_eq::MakeTypeWitness"><code>W: MakeTypeWitness&lt;Arg = T&gt;</code></a> 
+with the <code>T</code> and <code>W</code> type parameters flipped,
+most useful in supertrait bounds.</p>
+<p>This trait can’t be implemented outside of <code>typewit</code>.</p>
+<h2 id="example"><a href="#example">Example</a></h2>
+<p>This example shows how one can make a <code>const fn</code> that converts both 
+<code>&amp;str</code> and <code>&amp;[u8]</code> to <code>&amp;str</code></p>
+<p>(this example requires Rust 1.64.0)</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>typewit::{HasTypeWitness, TypeWitnessTypeArg, MakeTypeWitness, TypeEq};
+ 
+<span class="kw">fn </span>main() {
+    <span class="macro">assert_eq!</span>(str_try_from(<span class="string">&quot;hello&quot;</span>), <span class="prelude-val">Ok</span>(<span class="string">&quot;hello&quot;</span>));
+     
+    <span class="macro">assert_eq!</span>(str_try_from(<span class="kw-2">&amp;</span>[<span class="string">b&#39;w&#39;</span>, <span class="string">b&#39;o&#39;</span>, <span class="string">b&#39;r&#39;</span>, <span class="string">b&#39;l&#39;</span>, <span class="string">b&#39;d&#39;</span>]), <span class="prelude-val">Ok</span>(<span class="string">&quot;world&quot;</span>));
+     
+    <span class="macro">assert_eq!</span>(str_try_from(<span class="string">b&quot;foo bar&quot; </span><span class="kw">as </span><span class="kw-2">&amp;</span>[<span class="kw">_</span>]), <span class="prelude-val">Ok</span>(<span class="string">&quot;foo bar&quot;</span>));
+}
+ 
+<span class="kw">pub const fn </span>str_try_from&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>L: usize&gt;(
+    input: T
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, std::str::Utf8Error&gt;
+<span class="kw">where
+    </span>T: StrTryFrom&lt;<span class="lifetime">&#39;a</span>, L&gt;
+{
+    <span class="comment">// `T::WITNESS` expands to 
+    // `&lt;T as HasTypeWitness&lt;StrTryFromWitness&lt;&#39;a, L, T&gt;&gt;::WITNESS`
+    </span><span class="kw">match </span>T::WITNESS {
+        StrTryFromWitness::Str(te) =&gt; {
+            <span class="comment">// `te` (a `TypeEq&lt;T, &amp;&#39;a str&gt;`) allows coercing between `T` and `&amp;&#39;a str`.
+            </span><span class="kw">let </span>string: <span class="kw-2">&amp;</span>str = te.to_right(input);
+            <span class="prelude-val">Ok</span>(string)
+        }
+        StrTryFromWitness::Bytes(te) =&gt; {
+            <span class="kw">let </span>bytes: <span class="kw-2">&amp;</span>[u8] = te.to_right(input);
+            std::str::from_utf8(bytes)
+        }
+        StrTryFromWitness::Array(te) =&gt; {
+            <span class="kw">let </span>slice: <span class="kw-2">&amp;</span>[u8] = te.to_right(input);
+            str_try_from(slice)
+        }
+    }
+}
+ 
+ 
+<span class="comment">// trait alias pattern
+</span><span class="kw">pub trait </span>StrTryFrom&lt;<span class="lifetime">&#39;a</span>, <span class="kw">const </span>L: usize&gt;: 
+    Copy + HasTypeWitness&lt;StrTryFromWitness&lt;<span class="lifetime">&#39;a</span>, L, <span class="self">Self</span>&gt;&gt; 
+{}
+ 
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>L: usize&gt; StrTryFrom&lt;<span class="lifetime">&#39;a</span>, L&gt; <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: Copy + HasTypeWitness&lt;StrTryFromWitness&lt;<span class="lifetime">&#39;a</span>, L, T&gt;&gt;
+{}
+ 
+<span class="comment">// This macro declares a type witness enum
+</span><span class="macro">typewit::simple_type_witness! </span>{
+    <span class="comment">// Declares `enum StrTryFromWitness&lt;&#39;a, const L: usize, __Wit&gt;` 
+    // (the `__Wit` type parameter is implicitly added after all generics)
+    // `#[non_exhausitve]` allows adding more supported types.
+    </span><span class="attr">#[non_exhaustive]
+    </span><span class="kw">pub enum </span>StrTryFromWitness&lt;<span class="lifetime">&#39;a</span>, <span class="kw">const </span>L: usize&gt; {
+        <span class="comment">// This variant requires `__Wit == &amp;&#39;a str`
+        // 
+        // The `&lt;&#39;a, 0&gt;` here changes this macro from generating
+        // `impl&lt;&#39;a, const L: usize&gt; MakeTypeWitness for StrTryFromWitness&lt;&#39;a, L, &amp;&#39;a [u8]&gt;`
+        // to 
+        // `impl&lt;&#39;a&gt; MakeTypeWitness for StrTryFromWitness&lt;&#39;a, 0, &amp;&#39;a [u8]&gt;`
+        // which allows the compiler to infer generic arguments when
+        // using the latter `MakeTypeWitness` impl`
+        </span>Str&lt;<span class="lifetime">&#39;a</span>, <span class="number">0</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    
+        <span class="comment">// This variant requires `__Wit == &amp;&#39;a [u8]`
+        </span>Bytes&lt;<span class="lifetime">&#39;a</span>, <span class="number">0</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8],
+    
+        <span class="comment">// This variant requires `__Wit == &amp;&#39;a [u8; L]`
+        </span>Array = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8; L],
+    }
+}</code></pre></div>
+</div></details><h2 id="required-associated-consts" class="small-section-header">Required Associated Constants<a href="#required-associated-consts" class="anchor">§</a></h2><div class="methods"><details class="toggle" open><summary><section id="associatedconstant.WITNESS" class="method"><a class="srclink rightside" href="../../src/typewit/type_witness_traits.rs.html#99">source</a><h4 class="code-header">const <a href="#associatedconstant.WITNESS" class="constant">WITNESS</a>: W</h4></section></summary><div class="docblock"><p>A constant of the type witness</p>
+</div></details></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><details class="toggle implementors-toggle"><summary><section id="impl-HasTypeWitness%3CW%3E-for-T" class="impl"><a class="srclink rightside" href="../../src/typewit/type_witness_traits.rs.html#106">source</a><a href="#impl-HasTypeWitness%3CW%3E-for-T" class="anchor">§</a><h3 class="code-header">impl&lt;T, W&gt; <a class="trait" href="trait.HasTypeWitness.html" title="trait konst_kernel::type_eq::HasTypeWitness">HasTypeWitness</a>&lt;W&gt; for T<span class="where fmt-newline">where
+    W: <a class="trait" href="trait.MakeTypeWitness.html" title="trait konst_kernel::type_eq::MakeTypeWitness">MakeTypeWitness</a>&lt;Arg = T&gt;,
+    T: ?<a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,</span></h3></section></summary><div class="impl-items"><section id="associatedconstant.WITNESS-1" class="associatedconstant trait-impl"><a class="srclink rightside" href="../../src/typewit/type_witness_traits.rs.html#111">source</a><a href="#associatedconstant.WITNESS-1" class="anchor">§</a><h4 class="code-header">const <a href="#associatedconstant.WITNESS" class="constant">WITNESS</a>: W = W::MAKE</h4></section></div></details></div><script src="../../implementors/typewit/type_witness_traits/trait.HasTypeWitness.js" async></script></section></div></main></body></html>

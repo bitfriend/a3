@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="High-level OpenID Connect API using the Authorization Code flow."><title>matrix_sdk::oidc - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-63a85fc7cf22dee2.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="matrix_sdk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (696aaad58 2023-04-09)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/main-1159a395118aa44e.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../matrix_sdk/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../matrix_sdk/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module oidc</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../index.html">matrix_sdk</a>::<wbr><a class="mod" href="#">oidc</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../../src/matrix_sdk/oidc/mod.rs.html#15-1483">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>High-level OpenID Connect API using the Authorization Code flow.</p>
+<p>The OpenID Connect interactions with the Matrix API are currently a
+work-in-progress and are defined by <a href="https://github.com/matrix-org/matrix-spec-proposals/pull/3861">MSC3861</a> and its sub-proposals. And
+more documentation is available at <a href="https://areweoidcyet.com/">areweoidcyet.com</a>.</p>
+<h2 id="openid-connect-specification-compliance"><a href="#openid-connect-specification-compliance">OpenID Connect specification compliance</a></h2>
+<p>The OpenID Connect client used in the SDK has not been certified for
+compliance against the OpenID Connect specification.</p>
+<p>It implements only parts of the specification and is currently
+limited to the Authorization Code flow. It also uses some OAuth 2.0
+extensions.</p>
+<h2 id="setup"><a href="#setup">Setup</a></h2>
+<p>To enable support for OpenID Connect on the <a href="../struct.Client.html" title="struct matrix_sdk::Client"><code>Client</code></a>, simply enable the
+<code>experimental-oidc</code> cargo feature for the <code>matrix-sdk</code> crate. Then this
+authentication API is available with <a href="../struct.Client.html#method.oidc" title="method matrix_sdk::Client::oidc"><code>Client::oidc()</code></a>.</p>
+<h2 id="homeserver-support"><a href="#homeserver-support">Homeserver support</a></h2>
+<p>It is recommended to build the Client with <a href="../struct.Client.html#method.builder" title="associated function matrix_sdk::Client::builder"><code>Client::builder()</code></a> and then to
+enable auto-discovery by calling <a href="../struct.ClientBuilder.html#method.server_name" title="method matrix_sdk::ClientBuilder::server_name"><code>ClientBuilder::server_name()</code></a>. That will
+allow to discover the OpenID Connect Provider that is advertised by the
+homeserver. After building the client, you can check that the homeserver
+supports logging in via OIDC when <a href="struct.Oidc.html#method.authentication_server_info" title="method matrix_sdk::oidc::Oidc::authentication_server_info"><code>Oidc::authentication_server_info()</code></a>
+is set.</p>
+<p>If the homeserver doesn’t advertise its support for OIDC, but the issuer URL
+is known by some other method, it can be provided manually during
+registration.</p>
+<h2 id="registration"><a href="#registration">Registration</a></h2>
+<p>Registration is only required the first time a client encounters an issuer.</p>
+<p>If the issuer supports dynamic registration, it can be done by using
+<a href="struct.Oidc.html#method.register_client" title="method matrix_sdk::oidc::Oidc::register_client"><code>Oidc::register_client()</code></a>. If dynamic registration is not available, the
+homeserver should document how to obtain client credentials.</p>
+<p>To make the client aware of being registered successfully,
+<a href="struct.Oidc.html#method.restore_registered_client" title="method matrix_sdk::oidc::Oidc::restore_registered_client"><code>Oidc::restore_registered_client()</code></a> needs to be called next.</p>
+<p>After client registration, the client credentials should be persisted and
+reused for every session that interacts with that same issuer.</p>
+<h2 id="login"><a href="#login">Login</a></h2>
+<p>Before logging in, make sure to call <a href="struct.Oidc.html#method.restore_registered_client" title="method matrix_sdk::oidc::Oidc::restore_registered_client"><code>Oidc::restore_registered_client()</code></a>
+(even after registering the client), as it is the first step to know how to
+interact with the issuer.</p>
+<p>With OIDC, logging into a Matrix account is simply logging in with a
+predefined scope, part of it declaring the device ID of the session.</p>
+<p><a href="struct.Oidc.html#method.login" title="method matrix_sdk::oidc::Oidc::login"><code>Oidc::login()</code></a> constructs an <a href="struct.OidcAuthCodeUrlBuilder.html" title="struct matrix_sdk::oidc::OidcAuthCodeUrlBuilder"><code>OidcAuthCodeUrlBuilder</code></a> that can be
+configured, and then calling <a href="struct.OidcAuthCodeUrlBuilder.html#method.build" title="method matrix_sdk::oidc::OidcAuthCodeUrlBuilder::build"><code>OidcAuthCodeUrlBuilder::build()</code></a> will
+provide the URL to present to the user in a web browser. After
+authenticating with the OIDC provider, the user will be redirected to the
+provided redirect URI, with a code in the query that will allow to finish
+the authorization process by calling <a href="struct.Oidc.html#method.finish_authorization" title="method matrix_sdk::oidc::Oidc::finish_authorization"><code>Oidc::finish_authorization()</code></a>.</p>
+<h2 id="persistingrestoring-a-session"><a href="#persistingrestoring-a-session">Persisting/restoring a session</a></h2>
+<p>A full OIDC session requires two parts:</p>
+<ul>
+<li>The client credentials obtained after client registration with the
+corresponding client metadata,</li>
+<li>The user session obtained after login.</li>
+</ul>
+<p>Both parts are usually stored separately because the client credentials can
+be reused for any session with the same issuer, while the user session is
+unique.</p>
+<p><em>Note</em> that the type returned by <a href="struct.Oidc.html#method.full_session" title="method matrix_sdk::oidc::Oidc::full_session"><code>Oidc::full_session()</code></a> is not
+(de)serializable. This is due to some client credentials methods that
+require a function to generate a JWT. The types of some fields can still be
+(de)serialized.</p>
+<p>To restore a previous session, use <a href="struct.Oidc.html#method.restore_session" title="method matrix_sdk::oidc::Oidc::restore_session"><code>Oidc::restore_session()</code></a>.</p>
+<h2 id="refresh-tokens"><a href="#refresh-tokens">Refresh tokens</a></h2>
+<p>The use of refresh tokens with OpenID Connect Providers is more common than
+in the Matrix specification. For this reason, it is recommended to configure
+the client with <a href="../struct.ClientBuilder.html#method.handle_refresh_tokens" title="method matrix_sdk::ClientBuilder::handle_refresh_tokens"><code>ClientBuilder::handle_refresh_tokens()</code></a>, to handle
+refreshing tokens automatically.</p>
+<p>Applications should then listen to session tokens changes after logging in
+with <a href="struct.Oidc.html#method.session_tokens_stream" title="method matrix_sdk::oidc::Oidc::session_tokens_stream"><code>Oidc::session_tokens_stream()</code></a> to be able to restore the session at
+a later time, otherwise the end-user will need to login again.</p>
+<h2 id="unknown-token-error"><a href="#unknown-token-error">Unknown token error</a></h2>
+<p>A request to the Matrix API can return an <a href="../ruma/api/client/struct.Error.html" title="struct matrix_sdk::ruma::api::client::Error"><code>Error</code></a> with an
+<a href="../ruma/api/client/error/enum.ErrorKind.html#variant.UnknownToken" title="variant matrix_sdk::ruma::api::client::error::ErrorKind::UnknownToken"><code>ErrorKind::UnknownToken</code></a>.</p>
+<p>The first step is to try to refresh the token with
+<a href="struct.Oidc.html#method.refresh_access_token" title="method matrix_sdk::oidc::Oidc::refresh_access_token"><code>Oidc::refresh_access_token()</code></a>. This step is done automatically if the
+client was built with <a href="../struct.ClientBuilder.html#method.handle_refresh_tokens" title="method matrix_sdk::ClientBuilder::handle_refresh_tokens"><code>ClientBuilder::handle_refresh_tokens()</code></a>.</p>
+<p>If refreshing the access token fails, the next step is to try to request a
+new login authorization with <a href="struct.Oidc.html#method.login" title="method matrix_sdk::oidc::Oidc::login"><code>Oidc::login()</code></a>, using the device ID from the
+session. <em>Note</em> that in this case <a href="struct.Oidc.html#method.finish_login" title="method matrix_sdk::oidc::Oidc::finish_login"><code>Oidc::finish_login()</code></a> must NOT be
+called after <a href="struct.Oidc.html#method.finish_authorization" title="method matrix_sdk::oidc::Oidc::finish_authorization"><code>Oidc::finish_authorization()</code></a>.</p>
+<p>If this fails again, the client should assume to be logged out, and all
+local data should be erased.</p>
+<h2 id="insufficient-scope-error"><a href="#insufficient-scope-error">Insufficient scope error</a></h2>
+<p><em>Note: This is not fully specced yet.</em></p>
+<p>Some API calls that deal with sensitive data require more privileges than
+others. In the current Matrix specification, those endpoints use the
+User-Interactive Authentication API.</p>
+<p>The OAuth 2.0 specification has the concept of scopes, and an access token
+is limited to a given scope when it is generated. Accessing those endpoints
+require a privileged scope, so a new authorization request is necessary to
+get a new access token.</p>
+<p>When the API endpoint returns an <a href="../ruma/api/client/struct.Error.html" title="struct matrix_sdk::ruma::api::client::Error"><code>Error</code></a> with an
+<a href="../ruma/api/client/error/enum.AuthenticateError.html" title="enum matrix_sdk::ruma::api::client::error::AuthenticateError"><code>AuthenticateError::InsufficientScope</code></a>, the <a href="struct.Oidc.html#method.authorize_scope" title="method matrix_sdk::oidc::Oidc::authorize_scope"><code>Oidc::authorize_scope()</code></a>
+method can be used to authorize the required scope. It works just like
+<a href="struct.Oidc.html#method.login" title="method matrix_sdk::oidc::Oidc::login"><code>Oidc::login()</code></a>.</p>
+<h2 id="account-management"><a href="#account-management">Account management.</a></h2>
+<p>The homeserver might advertise a URL that allows the user to manage their
+account, alongside the issuer in the <a href="struct.Oidc.html#method.authentication_server_info" title="method matrix_sdk::oidc::Oidc::authentication_server_info"><code>Oidc::authentication_server_info()</code></a>
+obtained during registration.</p>
+<h2 id="logout"><a href="#logout">Logout</a></h2>
+<p>To log the <a href="../struct.Client.html" title="struct matrix_sdk::Client"><code>Client</code></a> out of the session, simply call <a href="struct.Oidc.html#method.logout" title="method matrix_sdk::oidc::Oidc::logout"><code>Oidc::logout()</code></a>.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+<p>Most methods have examples, there is also an example CLI application that
+supports all the actions described here, in <a href="https://github.com/matrix-org/matrix-rust-sdk/tree/main/examples/oidc-cli"><code>examples/oidc-cli</code></a>.</p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="error/index.html" title="mod matrix_sdk::oidc::error">error</a></div><div class="desc docblock-short">The error types used in this crate.</div></li><li><div class="item-name"><a class="mod" href="types/index.html" title="mod matrix_sdk::oidc::types">types</a></div><div class="desc docblock-short">OAuth 2.0 and OpenID Connect types.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.AuthorizationCode.html" title="struct matrix_sdk::oidc::AuthorizationCode">AuthorizationCode</a></div><div class="desc docblock-short">The data returned by the provider in the redirect URI after a successful
+authorization.</div></li><li><div class="item-name"><a class="struct" href="struct.AuthorizationError.html" title="struct matrix_sdk::oidc::AuthorizationError">AuthorizationError</a></div><div class="desc docblock-short">The data returned by the provider in the redirect URI after an authorization
+error.</div></li><li><div class="item-name"><a class="struct" href="struct.Oidc.html" title="struct matrix_sdk::oidc::Oidc">Oidc</a></div><div class="desc docblock-short">A high-level authentication API to interact with an OpenID Connect Provider.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcAuthCodeUrlBuilder.html" title="struct matrix_sdk::oidc::OidcAuthCodeUrlBuilder">OidcAuthCodeUrlBuilder</a></div><div class="desc docblock-short">Builder type used to configure optional settings for authorization with an
+OpenID Connect Provider via the Authorization Code flow.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcAuthorizationData.html" title="struct matrix_sdk::oidc::OidcAuthorizationData">OidcAuthorizationData</a></div><div class="desc docblock-short">The data needed to perform authorization using OpenID Connect.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcEndSessionData.html" title="struct matrix_sdk::oidc::OidcEndSessionData">OidcEndSessionData</a></div><div class="desc docblock-short">Data for the user to log out from their account in the issuer’s interface.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcEndSessionUrlBuilder.html" title="struct matrix_sdk::oidc::OidcEndSessionUrlBuilder">OidcEndSessionUrlBuilder</a></div><div class="desc docblock-short">Builder type used to configure optional settings for constructing an
+<a href="https://openid.net/specs/openid-connect-rpinitiated-1_0.html">RP-Initiated Logout</a> URL with an OpenID Connect provider.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcSession.html" title="struct matrix_sdk::oidc::OidcSession">OidcSession</a></div><div class="desc docblock-short">A full session for the OpenID Connect API.</div></li><li><div class="item-name"><a class="struct" href="struct.OidcSessionTokens.html" title="struct matrix_sdk::oidc::OidcSessionTokens">OidcSessionTokens</a></div><div class="desc docblock-short">The tokens for a user session obtained with the OpenID Connect API.</div></li><li><div class="item-name"><a class="struct" href="struct.UserSession.html" title="struct matrix_sdk::oidc::UserSession">UserSession</a></div><div class="desc docblock-short">A user session for the OpenID Connect API.</div></li></ul><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.AuthorizationResponse.html" title="enum matrix_sdk::oidc::AuthorizationResponse">AuthorizationResponse</a></div><div class="desc docblock-short">The data returned by the provider in the redirect URI after a successful
+authorization.</div></li><li><div class="item-name"><a class="enum" href="enum.OidcAccountManagementAction.html" title="enum matrix_sdk::oidc::OidcAccountManagementAction">OidcAccountManagementAction</a></div><div class="desc docblock-short">Indicates the action that the user wishes to take when showing the account
+URL page.</div></li><li><div class="item-name"><a class="enum" href="enum.OidcError.html" title="enum matrix_sdk::oidc::OidcError">OidcError</a></div><div class="desc docblock-short">All errors that can occur when using the OpenID Connect API.</div></li><li><div class="item-name"><a class="enum" href="enum.RedirectUriQueryParseError.html" title="enum matrix_sdk::oidc::RedirectUriQueryParseError">RedirectUriQueryParseError</a></div><div class="desc docblock-short">An error when trying to parse the query of a redirect URI.</div></li></ul></section></div></main></body></html>

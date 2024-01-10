@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Aggregation","InstrumentKind"],"fn":["new_view"],"mod":["data","exporter","reader"],"struct":["Instrument","ManualReader","ManualReaderBuilder","Meter","MeterProvider","MeterProviderBuilder","PeriodicReader","PeriodicReaderBuilder","Stream"],"trait":["View"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Temporality"],"struct":["DataPoint","Exemplar","Gauge","Histogram","HistogramDataPoint","Metric","ResourceMetrics","ScopeMetrics","Sum"],"trait":["Aggregation"]};

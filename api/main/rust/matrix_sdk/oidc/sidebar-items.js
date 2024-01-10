@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuthorizationResponse","OidcAccountManagementAction","OidcError","RedirectUriQueryParseError"],"mod":["error","types"],"struct":["AuthorizationCode","AuthorizationError","Oidc","OidcAuthCodeUrlBuilder","OidcAuthorizationData","OidcEndSessionData","OidcEndSessionUrlBuilder","OidcSession","OidcSessionTokens","UserSession"]};
