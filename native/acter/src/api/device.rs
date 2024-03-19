@@ -128,6 +128,7 @@ impl Client {
         }
     }
 
+    #[cfg(feature = "testing")]
     pub async fn device_records(&self, verified: bool) -> Result<Vec<DeviceRecord>> {
         let client = self.clone();
         RUNTIME

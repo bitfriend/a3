@@ -2439,9 +2439,6 @@ object Client {
     /// allow to configure notification settings
     fn notification_settings() -> Future<Result<NotificationSettings>>;
 
-    /// the list of devices
-    fn device_records(verified: bool) -> Future<Result<Vec<DeviceRecord>>>;
-
     /// make draft to send text plain msg
     fn text_plain_draft(body: string) -> MsgContentDraft;
 

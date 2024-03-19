@@ -20,22 +20,27 @@ fn wait_for_verification_event(
 }
 
 #[tokio::test]
-#[ignore = "test runs forever in both github runner and local synapse :("]
 async fn interactive_verification_started_from_request() -> Result<()> {
     let _ = env_logger::try_init();
 
+    let username = "@sisko".to_string();
+    let password = default_user_password("sisko");
+    let homeserver_name = option_env!("DEFAULT_HOMESERVER_NAME")
+        .unwrap_or("localhost")
+        .to_string();
+    let homeserver_url = option_env!("DEFAULT_HOMESERVER_URL")
+        .unwrap_or("http://localhost:8118")
+        .to_string();
+
+    info!("alice login");
     let alice_dir = TempDir::new()?;
     let mut alice = login_new_client(
         alice_dir.path().to_string_lossy().to_string(),
         alice_dir.path().to_string_lossy().to_string(),
-        "@sisko".to_string(),
-        default_user_password("sisko"),
-        option_env!("DEFAULT_HOMESERVER_NAME")
-            .unwrap_or("localhost")
-            .to_string(),
-        option_env!("DEFAULT_HOMESERVER_URL")
-            .unwrap_or("http://localhost:8118")
-            .to_string(),
+        username.clone(),
+        password.clone(),
+        homeserver_name.clone(),
+        homeserver_url.clone(),
         Some("ALICE_DEV".to_string()),
     )
     .await?;
@@ -47,14 +52,10 @@ async fn interactive_verification_started_from_request() -> Result<()> {
     let mut bob = login_new_client(
         bob_dir.path().to_string_lossy().to_string(),
         bob_dir.path().to_string_lossy().to_string(),
-        "@sisko".to_string(),
-        default_user_password("sisko"),
-        option_env!("DEFAULT_HOMESERVER_NAME")
-            .unwrap_or("localhost")
-            .to_string(),
-        option_env!("DEFAULT_HOMESERVER_URL")
-            .unwrap_or("http://localhost:8118")
-            .to_string(),
+        username,
+        password,
+        homeserver_name,
+        homeserver_url,
         Some("BOB_DEV".to_string()),
     )
     .await?;
@@ -85,9 +86,10 @@ async fn interactive_verification_started_from_request() -> Result<()> {
     // On Alice's device:
 
     // Alice gets notified that new device (Bob) was logged in
+    let session_manager = alice.session_manager();
     loop {
         if let Ok(Some(event)) = alice_device_new_rx.try_next() {
-            if let Ok(_devices) = alice.device_records(false).await {
+            if let Ok(_devices) = session_manager.all_sessions().await {
                 // Alice sends a verification request with her desired methods to Bob
                 event
                     .request_verification_to_device_with_methods(

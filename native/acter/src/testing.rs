@@ -59,6 +59,13 @@ pub async fn default_client_config(
     Ok(builder)
 }
 
+pub fn default_user_password(reg_token: Option<&str>, username: &str) -> String {
+    match reg_token {
+        Some(token) => format!("{token}:{username}"),
+        None => username.to_string(),
+    }
+}
+
 pub async fn ensure_user(
     homeserver_url: String,
     homeserver_name: String,
@@ -86,10 +93,7 @@ pub async fn ensure_user(
     };
 
     let with_token = reg_token.is_some();
-    let password = match &reg_token {
-        Some(token) => format!("{token}:{username}"),
-        None => username.clone(),
-    };
+    let password = default_user_password(reg_token, &username);
 
     let cl = config.clone().build().await?;
     let login_res = cl
