@@ -1,11 +1,15 @@
 import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
+import 'package:acter/common/tutorial_dialogs/space_overview_tutorials/create_or_join_space_tutorials.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/spaces/space_card.dart';
 import 'package:acter/features/home/data/keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class MySpacesSection extends ConsumerWidget {
   final int? limit;
@@ -18,6 +22,7 @@ class MySpacesSection extends ConsumerWidget {
 
     int spacesLimit =
         (limit != null && spaces.length > limit!) ? limit! : spaces.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -25,7 +30,7 @@ class MySpacesSection extends ConsumerWidget {
           key: DashboardKeys.widgetMySpacesHeader,
           onTap: () => context.pushNamed(Routes.spaces.name),
           child: Text(
-            'My Spaces',
+            L10n.of(context).mySpaces,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -52,7 +57,9 @@ class MySpacesSection extends ConsumerWidget {
                             onPressed: () {
                               context.pushNamed(Routes.spaces.name);
                             },
-                            child: Text('See all my ${spaces.length} spaces'),
+                            child: Text(
+                              L10n.of(context).seeAllMySpaces(spaces.length),
+                            ),
                           )
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,13 +67,13 @@ class MySpacesSection extends ConsumerWidget {
                               OutlinedButton(
                                 onPressed: () =>
                                     context.pushNamed(Routes.createSpace.name),
-                                child: const Text('Create Space'),
+                                child: Text(L10n.of(context).createSpace),
                               ),
                               const SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: () =>
-                                    context.pushNamed(Routes.joinSpace.name),
-                                child: const Text('Join Space'),
+                              ActerPrimaryActionButton(
+                                onPressed: () => context.pushNamed(
+                                    Routes.searchPublicDirectory.name,),
+                                child: Text(L10n.of(context).joinSpace),
                               ),
                             ],
                           ),
@@ -78,16 +85,27 @@ class MySpacesSection extends ConsumerWidget {
   }
 }
 
-class _NoSpacesWidget extends ConsumerWidget {
+class _NoSpacesWidget extends ConsumerStatefulWidget {
   const _NoSpacesWidget();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() => _NoSpacesWidgetState();
+}
+
+class _NoSpacesWidgetState extends ConsumerState<_NoSpacesWidget> {
+  @override
+  void initState() {
+    super.initState();
+    if (!isDesktop) createOrJoinSpaceTutorials(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
         const SizedBox(height: 15),
         Text(
-          'You are currently not connected to any spaces',
+          L10n.of(context).youAreCurrentlyNotConnectedToAnySpaces,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 30),
@@ -95,22 +113,26 @@ class _NoSpacesWidget extends ConsumerWidget {
           text: TextSpan(
             children: <TextSpan>[
               TextSpan(
-                text: 'Create\t',
+                text: L10n.of(context).create,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       decoration: TextDecoration.underline,
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const TextSpan(text: 'or\t'),
+              TextSpan(text: L10n.of(context).or),
               TextSpan(
-                text: 'join\t',
+                text: L10n.of(context).join,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       decoration: TextDecoration.underline,
                       fontWeight: FontWeight.bold,
                     ),
               ),
               TextSpan(
-                text: 'a space, to start organizing and collaborating',
+                text: ' ',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              TextSpan(
+                text: L10n.of(context).spaceShortDescription,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -119,47 +141,21 @@ class _NoSpacesWidget extends ConsumerWidget {
         ),
         SizedBox(height: MediaQuery.of(context).size.height * 0.15),
         Center(
-          child: ElevatedButton(
+          child: OutlinedButton.icon(
+            key: createNewSpaceKey,
+            icon: const Icon(Icons.chevron_right_outlined),
             onPressed: () => context.pushNamed(Routes.createSpace.name),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.neutral6,
-              foregroundColor: Theme.of(context).colorScheme.neutral,
-              textStyle: Theme.of(context).textTheme.bodyLarge,
-              fixedSize: const Size(311, 61),
-              shape: RoundedRectangleBorder(
-                side: BorderSide.none,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Create New Space'),
-                SizedBox(width: 10),
-                Icon(Icons.chevron_right_outlined),
-              ],
-            ),
+            label: Text(L10n.of(context).createNewSpace),
           ),
         ),
         const SizedBox(height: 36),
         Center(
-          child: ElevatedButton(
+          child: ActerPrimaryActionButton(
+            key: joinExistingSpaceKey,
             onPressed: () {
-              context.pushNamed(Routes.joinSpace.name);
+              context.pushNamed(Routes.searchPublicDirectory.name);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: Theme.of(context).colorScheme.neutral6,
-              textStyle: Theme.of(context).textTheme.bodyLarge,
-              fixedSize: const Size(311, 61),
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.neutral6,
-                ),
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-            child: const Text('Join Existing Space'),
+            child: Text(L10n.of(context).joinExistingSpace),
           ),
         ),
       ],

@@ -1,7 +1,4 @@
-use futures::{
-    channel::mpsc::{channel, Receiver, Sender},
-    stream::StreamExt,
-};
+use futures::channel::mpsc::{channel, Receiver, Sender};
 use matrix_sdk::{
     event_handler::{Ctx, EventHandlerHandle},
     room::Room,
@@ -53,8 +50,7 @@ impl TypingController {
     }
 
     pub fn add_event_handler(&mut self, client: &SdkClient) {
-        let me = self.clone();
-        client.add_event_handler_context(me);
+        client.add_event_handler_context(self.clone());
         let handle = client.add_event_handler(
             |ev: SyncTypingEvent, room: Room, Ctx(me): Ctx<TypingController>| async move {
                 me.clone().process_ephemeral_event(ev, &room);

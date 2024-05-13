@@ -1,12 +1,15 @@
 import 'package:acter/common/providers/chat_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/snackbars/custom_msg.dart';
 import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:acter/common/widgets/input_text_field.dart';
 import 'package:acter/features/events/providers/event_providers.dart';
 import 'package:acter/features/pins/providers/pins_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
@@ -48,7 +51,7 @@ class RedactContentWidget extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text(
-            title ?? 'Remove',
+            title ?? L10n.of(context).remove,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -56,8 +59,7 @@ class RedactContentWidget extends ConsumerWidget {
       subtitle: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(
-          description ??
-              'Remove this content. This can not be undone. Provide an optional reason to explain, why this was removed',
+          description ?? L10n.of(context).removeThisContent,
           style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 color: Theme.of(context).colorScheme.neutral6,
               ),
@@ -67,7 +69,7 @@ class RedactContentWidget extends ConsumerWidget {
         padding: const EdgeInsets.all(8.0),
         child: InputTextField(
           controller: reasonController,
-          hintText: 'Reason',
+          hintText: L10n.of(context).reason,
           textInputType: TextInputType.multiline,
           maxLines: 5,
         ),
@@ -76,26 +78,20 @@ class RedactContentWidget extends ConsumerWidget {
         OutlinedButton(
           key: cancelBtnKey,
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Close'),
+          child: Text(L10n.of(context).close),
         ),
-        ElevatedButton(
+        ActerPrimaryActionButton(
           key: removeBtnKey,
           onPressed: onRemove ??
               () => redactContent(context, ref, reasonController.text),
-          child: const Text('Remove'),
+          child: Text(L10n.of(context).remove),
         ),
       ],
     );
   }
 
   void redactContent(BuildContext ctx, WidgetRef ref, String reason) async {
-    showAdaptiveDialog(
-      context: (ctx),
-      builder: (ctx) => const DefaultDialog(
-        title: Text('Removing content'),
-        isLoader: true,
-      ),
-    );
+    EasyLoading.show(status: L10n.of(ctx).removingContent);
     try {
       if (isSpace) {
         final space = await ref.read(spaceProvider(roomId).future);
@@ -113,30 +109,23 @@ class RedactContentWidget extends ConsumerWidget {
         );
       }
 
-      if (ctx.mounted) {
-        Navigator.of(ctx, rootNavigator: true).pop();
-        Navigator.of(ctx, rootNavigator: true).pop(true);
-        customMsgSnackbar(ctx, 'Content successfully removed');
-        if (onSuccess != null) {
-          onSuccess!();
-        }
+      if (!ctx.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showToast(L10n.of(ctx).contentSuccessfullyRemoved);
+      if (onSuccess != null) {
+        onSuccess!();
       }
     } catch (e) {
-      if (ctx.mounted) {
-        Navigator.of(ctx, rootNavigator: true).pop();
-        showAdaptiveDialog(
-          context: ctx,
-          builder: (ctx) => DefaultDialog(
-            title: Text('Redaction sending failed due to some $e'),
-            actions: <Widget>[
-              OutlinedButton(
-                onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
+      if (!ctx.mounted) {
+        EasyLoading.dismiss();
+        return;
       }
+      EasyLoading.showError(
+        '${L10n.of(ctx).redactionFailed} $e',
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 }

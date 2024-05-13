@@ -1,26 +1,32 @@
 import 'package:acter/common/notifications/notifications.dart';
 import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter/common/toolkit/buttons/danger_action_button.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
+import 'package:acter/common/widgets/with_sidebar.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
+import 'package:acter/features/room/widgets/notifications_settings_tile.dart';
 import 'package:acter/features/settings/pages/settings_page.dart';
+import 'package:acter/features/settings/providers/notifications_mode_provider.dart';
+import 'package:acter/features/settings/providers/settings_providers.dart';
 import 'package:acter/features/settings/widgets/app_notifications_settings_tile.dart';
 import 'package:acter/features/settings/widgets/labs_notifications_settings_tile.dart';
-import 'package:acter/features/room/widgets/notifications_settings_tile.dart';
-import 'package:acter/features/settings/providers/notifications_mode_provider.dart';
 import 'package:acter/features/settings/widgets/settings_section_with_title_actions.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
-import 'package:acter/common/widgets/with_sidebar.dart';
-import 'package:acter/features/settings/providers/settings_providers.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:settings_ui/settings_ui.dart';
+
+final _log = Logger('a3::settings::notifications_page');
 
 class _AddEmail extends StatefulWidget {
   final List<String> emails;
-  const _AddEmail(
-    this.emails,
-  );
+
+  const _AddEmail(this.emails);
 
   @override
   State<_AddEmail> createState() => __AddEmailState();
@@ -38,7 +44,7 @@ class __AddEmailState extends State<_AddEmail> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Email address to add'),
+      title: Text(L10n.of(context).emailAddressToAdd),
       content: DropdownMenu<String>(
         initialSelection: widget.emails.first,
         onSelected: (String? value) {
@@ -52,16 +58,17 @@ class __AddEmailState extends State<_AddEmail> {
           return DropdownMenuEntry<String>(value: value, label: value);
         }).toList(),
       ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: <Widget>[
-        TextButton(
+        OutlinedButton(
           onPressed: () => Navigator.pop(context, null),
-          child: const Text('Cancel'),
+          child: Text(L10n.of(context).cancel),
         ),
-        TextButton(
+        ActerPrimaryActionButton(
           onPressed: () {
             Navigator.pop(context, emailAddr);
           },
-          child: const Text('Add'),
+          child: Text(L10n.of(context).add),
         ),
       ],
     );
@@ -79,50 +86,52 @@ class NotificationsSettingsPage extends ConsumerWidget {
         appBar: AppBar(
           backgroundColor: const AppBarTheme().backgroundColor,
           elevation: 0.0,
-          title: const Text('Notifications'),
+          title: Text(L10n.of(context).notifications),
         ),
         body: SettingsList(
           shrinkWrap: true,
           sections: [
-            const SettingsSection(
-              title: Text('Notifications'),
+            SettingsSection(
+              title: Text(L10n.of(context).notifications),
               tiles: [
-                LabsNotificationsSettingsTile(title: 'Push to this device'),
+                LabsNotificationsSettingsTile(
+                  title: L10n.of(context).pushToThisDevice,
+                ),
                 AppsNotificationsSettingsTile(
-                  title: 'Updates',
-                  description: 'Notify about Space Updates immediately',
+                  title: L10n.of(context).updates,
+                  description: L10n.of(context).notifyAboutSpaceUpdates,
                   appKey: 'global.acter.dev.news',
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('Default Modes'),
+              title: Text(L10n.of(context).defaultModes),
               tiles: [
                 _notifSection(
                   context,
                   ref,
-                  'Regular Space or Chat',
+                  L10n.of(context).regularSpaceOrChat,
                   false,
                   false,
                 ),
                 _notifSection(
                   context,
                   ref,
-                  'Encrypted Space or Chat',
+                  L10n.of(context).encryptedSpaceOrChat,
                   true,
                   false,
                 ),
                 _notifSection(
                   context,
                   ref,
-                  'DM Chat',
+                  L10n.of(context).dmChat,
                   false,
                   true,
                 ),
                 _notifSection(
                   context,
                   ref,
-                  'Encrypted DM Chat',
+                  L10n.of(context).encryptedDMChat,
                   true,
                   true,
                 ),
@@ -151,58 +160,69 @@ class NotificationsSettingsPage extends ConsumerWidget {
             .valueOrNull ??
         '';
     return SettingsTile(
-      title: Text(
-        title,
-      ),
+      title: Text(title),
       description: Text(
-        notifToText(curNotifStatus) ?? '(unset)',
+        notifToText(context, curNotifStatus) ?? '(${L10n.of(context).unset})',
       ),
       trailing: PopupMenuButton<String>(
         initialValue: curNotifStatus,
         // Callback that sets the selected popup menu item.
-        onSelected: (String newMode) async {
-          final client = ref.read(clientProvider);
-          if (client == null) {
-            // ignore: use_build_context_synchronously
-            EasyLoading.showError('client not found');
-            return;
-          }
-          EasyLoading.show();
-          try {
-            await ref
-                .read(notificationSettingsProvider)
-                .valueOrNull!
-                .setDefaultNotificationMode(
-                  isEncrypted,
-                  isOneToOne,
-                  newMode,
-                );
-            EasyLoading.showSuccess(
-              'Notification status submitted',
-            );
-          } catch (e) {
-            EasyLoading.showError(
-              'Notification status update failed: $e',
-              duration: const Duration(seconds: 3),
-            );
-          }
-        },
+        onSelected: (newMode) => _onNotifSectionChange(
+          context,
+          ref,
+          isEncrypted,
+          isOneToOne,
+          newMode,
+        ),
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'all',
-            child: Text('All Messages'),
+            child: Text(L10n.of(context).allMessages),
           ),
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'mentions',
-            child: Text('Mentions and Keywords only'),
+            child: Text(L10n.of(context).mentionsAndKeywordsOnly),
           ),
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'muted',
-            child: Text('Muted'),
+            child: Text(L10n.of(context).muted),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _onNotifSectionChange(
+    BuildContext context,
+    WidgetRef ref,
+    bool isEncrypted,
+    bool isOneToOne,
+    String newMode,
+  ) async {
+    EasyLoading.show(status: L10n.of(context).changingNotificationMode);
+    try {
+      final notifier = ref.read(notificationSettingsProvider).valueOrNull!;
+      await notifier.setDefaultNotificationMode(
+        isEncrypted,
+        isOneToOne,
+        newMode,
+      );
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showToast(L10n.of(context).notificationStatusSubmitted);
+    } catch (e, st) {
+      _log.severe('Failed to update notification status', e, st);
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).notificationStatusUpdateFailed(e),
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
 
   SettingsSectionWithTitleActions _pushTargets(
@@ -211,7 +231,7 @@ class NotificationsSettingsPage extends ConsumerWidget {
   ) {
     final potentialEmails = ref.watch(possibleEmailToAddForPushProvider);
     return SettingsSectionWithTitleActions(
-      title: const Text('Notification Targets'),
+      title: Text(L10n.of(context).notificationTargets),
       actions: potentialEmails.maybeWhen(
         orElse: () => [],
         data: (emails) {
@@ -226,36 +246,7 @@ class NotificationsSettingsPage extends ConsumerWidget {
               ),
               iconSize: 20,
               color: Theme.of(context).colorScheme.surface,
-              onPressed: () async {
-                final emailToAdd = await showDialog<String?>(
-                  context: context,
-                  builder: (BuildContext context) => _AddEmail(emails),
-                );
-                if (emailToAdd != null) {
-                  EasyLoading.show(status: 'Adding $emailToAdd');
-                  final client = ref.read(
-                    alwaysClientProvider,
-                  ); // is guaranteed because of the ignoredUsersProvider using it
-                  try {
-                    await client.addEmailPusher(
-                      appIdPrefix,
-                      (await deviceName()),
-                      emailToAdd,
-                      null,
-                    );
-                    ref.invalidate(possibleEmailToAddForPushProvider);
-                  } catch (e) {
-                    EasyLoading.showError(
-                      'Failed to add $emailToAdd: $e',
-                    );
-                    return;
-                  }
-                  ref.invalidate(pushersProvider);
-                  EasyLoading.showSuccess(
-                    '$emailToAdd added to pusher list',
-                  );
-                }
-              },
+              onPressed: () => _onTargetAdd(context, ref, emails),
             ),
           ];
         },
@@ -265,108 +256,153 @@ class NotificationsSettingsPage extends ConsumerWidget {
               if (items.isEmpty) {
                 return [
                   SettingsTile(
-                    title: const Text('no push targets added yet'),
+                    title: Text(L10n.of(context).noPushTargetsAddedYet),
                   ),
                 ];
               }
               return items
-                  .map(
-                    (item) => _pusherTile(context, ref, item),
-                  )
+                  .map((item) => _pusherTile(context, ref, item))
                   .toList();
             },
             error: (e, s) => [
               SettingsTile(
-                title: Text('failed to load push targets: $e'),
+                title: Text(L10n.of(context).failedToLoadPushTargets(e)),
               ),
             ],
             loading: () => [
               SettingsTile(
-                title: const Text('loading targets'),
+                title: Text(L10n.of(context).loadingTargets),
               ),
             ],
           ),
     );
   }
 
+  Future<void> _onTargetAdd(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> emails,
+  ) async {
+    final emailToAdd = await showDialog<String?>(
+      context: context,
+      builder: (BuildContext context) => _AddEmail(emails),
+    );
+    if (!context.mounted) return;
+    if (emailToAdd == null) return;
+    EasyLoading.show(status: L10n.of(context).adding(emailToAdd));
+    final client = ref.read(
+      alwaysClientProvider,
+    ); // is guaranteed because of the ignoredUsersProvider using it
+    try {
+      await client.addEmailPusher(
+        appIdPrefix,
+        (await deviceName()),
+        emailToAdd,
+        null,
+      );
+      ref.invalidate(possibleEmailToAddForPushProvider);
+    } catch (e) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToAdd('$emailToAdd: $e'),
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+    ref.invalidate(pushersProvider);
+    if (!context.mounted) {
+      EasyLoading.dismiss();
+      return;
+    }
+    EasyLoading.showToast(L10n.of(context).addedToPusherList(emailToAdd));
+  }
+
   SettingsTile _pusherTile(BuildContext context, WidgetRef ref, Pusher item) {
     final isEmail = item.isEmailPusher();
     return SettingsTile(
-      leading: isEmail
-          ? const Icon(Atlas.envelope)
-          : const Icon(Atlas.mobile_portrait_thin),
-      title: isEmail ? Text(item.pushkey()) : Text(item.deviceDisplayName()),
+      leading: Icon(isEmail ? Atlas.envelope : Atlas.mobile_portrait_thin),
+      title: Text(isEmail ? item.pushkey() : item.deviceDisplayName()),
       description: isEmail ? null : Text(item.appDisplayName()),
       trailing: const Icon(Atlas.dots_vertical_thin),
       onPressed: (context) => showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Push Target Details'),
+          title: Text(L10n.of(context).pushTargetDetails),
           content: SizedBox(
             width: 300,
             child: ListView(
               shrinkWrap: true,
               children: [
                 ListTile(
-                  title: const Text('AppId'),
+                  title: Text(L10n.of(context).appId),
                   subtitle: Text(item.appId()),
                 ),
                 ListTile(
-                  title: const Text('PushKey'),
+                  title: Text(L10n.of(context).pushKey),
                   subtitle: Text(item.pushkey()),
                 ),
                 ListTile(
-                  title: const Text('App Name'),
+                  title: Text(L10n.of(context).appName),
                   subtitle: Text(item.appDisplayName()),
                 ),
                 ListTile(
-                  title: const Text('Device Name'),
+                  title: Text(L10n.of(context).deviceName),
                   subtitle: Text(item.deviceDisplayName()),
                 ),
                 ListTile(
-                  title: const Text('Language'),
+                  title: Text(L10n.of(context).language),
                   subtitle: Text(item.lang()),
                 ),
               ],
             ),
             // alert dialog with details;
           ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
           actions: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.red,
-                border: Border.all(color: Colors.red),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: TextButton(
-                onPressed: () async {
-                  Navigator.pop(context, null);
-                  EasyLoading.show(status: 'Deleting push target');
-                  try {
-                    await item.delete();
-                    EasyLoading.showSuccess('Push target deleted');
-                    ref.invalidate(possibleEmailToAddForPushProvider);
-                    ref.invalidate(pushersProvider);
-                  } catch (e) {
-                    EasyLoading.showSuccess(
-                      'Deletion failed: $e',
-                      duration: const Duration(seconds: 3),
-                    );
-                  }
-                },
-                child: const Text(
-                  'Delete Target',
-                  style: TextStyle(color: Colors.white, fontSize: 17),
-                ),
-              ),
-            ),
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.pop(context, null),
-              child: const Text('Close Dialog'),
+              child: Text(L10n.of(context).closeDialog),
+            ),
+            ActerDangerActionButton(
+              onPressed: () => _onTargetDelete(context, ref, item),
+              child: Text(
+                L10n.of(context).deleteTarget,
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _onTargetDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Pusher item,
+  ) async {
+    Navigator.pop(context, null);
+    EasyLoading.show(status: L10n.of(context).deletingPushTarget);
+    try {
+      await item.delete();
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showToast(L10n.of(context).pushTargetDeleted);
+      ref.invalidate(possibleEmailToAddForPushProvider);
+      ref.invalidate(pushersProvider);
+    } catch (e) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).deletionFailed(e),
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
 }

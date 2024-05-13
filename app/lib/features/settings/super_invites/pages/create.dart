@@ -1,15 +1,18 @@
+import 'package:acter/common/toolkit/buttons/danger_action_button.dart';
+
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/chat/chat_selector_drawer.dart';
 import 'package:acter/common/widgets/checkbox_form_field.dart';
 import 'package:acter/common/widgets/input_text_field.dart';
 import 'package:acter/common/widgets/sliver_scaffold.dart';
+import 'package:acter/common/widgets/spaces/space_selector_drawer.dart';
 import 'package:acter/features/settings/super_invites/providers/super_invites_providers.dart';
 import 'package:acter/features/settings/super_invites/widgets/to_join_room.dart';
-import 'package:acter/common/widgets/spaces/space_selector_drawer.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +25,7 @@ class CreateSuperInviteTokenPage extends ConsumerStatefulWidget {
   static Key deleteBtn = const Key('super-invites-create-delete');
   static Key deleteConfirm = const Key('super-invites-create-delete-confirm');
   final SuperInviteToken? token;
+
   const CreateSuperInviteTokenPage({super.key, this.token});
 
   @override
@@ -61,7 +65,9 @@ class _CreateSuperInviteTokenPageConsumerState
   @override
   Widget build(BuildContext context) {
     return SliverScaffold(
-      header: isEdit ? 'Edit Invite Code' : 'Create Invite Code',
+      header: isEdit
+          ? L10n.of(context).editInviteCode
+          : L10n.of(context).createInviteCode,
       addActions: true,
       body: Form(
         key: _formKey,
@@ -74,7 +80,9 @@ class _CreateSuperInviteTokenPageConsumerState
               isEdit
                   ? ListTile(
                       title: Text(_tokenController.text),
-                      subtitle: Text('Claimed $_acceptedCount times'),
+                      subtitle: Text(
+                        L10n.of(context).claimedTimes(_acceptedCount),
+                      ),
                       trailing: IconButton(
                         key: CreateSuperInviteTokenPage.deleteBtn,
                         icon: const Icon(Atlas.trash_can_thin),
@@ -82,23 +90,23 @@ class _CreateSuperInviteTokenPageConsumerState
                       ),
                     )
                   : InputTextField(
-                      hintText: 'Code',
+                      hintText: L10n.of(context).code,
                       key: CreateSuperInviteTokenPage.tokenFieldKey,
                       textInputType: TextInputType.text,
                       controller: _tokenController,
-                      validator: (String? val) =>
-                          (val?.isNotEmpty == true && val!.length < 6)
-                              ? 'Code must be at least 6 characters long'
-                              : null,
+                      validator: (String? val) => (val?.isNotEmpty == true &&
+                              val!.length < 6)
+                          ? L10n.of(context).codeMustBeAtLeast6CharactersLong
+                          : null,
                     ),
               CheckboxFormField(
                 key: CreateSuperInviteTokenPage.createDmKey,
-                title: const Text('Create DM when redeeming'),
+                title: Text(L10n.of(context).createDMWhenRedeeming),
                 onChanged: (newValue) =>
                     setState(() => tokenUpdater.createDm(newValue ?? false)),
                 initialValue: _initialDmCheck,
               ),
-              const Text('Spaces & Chats to add them to'),
+              Text(L10n.of(context).spacesAndChatsToAddThemTo),
               Card(
                 child: ListTile(
                   title: ButtonBar(
@@ -110,7 +118,7 @@ class _CreateSuperInviteTokenPageConsumerState
                             context: context,
                             currentSpaceId: null,
                             canCheck: 'CanInvite',
-                            title: const Text('Add Space'),
+                            title: Text(L10n.of(context).addSpace),
                           );
                           if (newSpace != null) {
                             if (!_roomIds.contains(newSpace)) {
@@ -122,7 +130,7 @@ class _CreateSuperInviteTokenPageConsumerState
                             }
                           }
                         },
-                        child: const Text('Add Space'),
+                        child: Text(L10n.of(context).addSpace),
                       ),
                       OutlinedButton(
                         key: CreateSuperInviteTokenPage.addChatKey,
@@ -131,7 +139,7 @@ class _CreateSuperInviteTokenPageConsumerState
                             context: context,
                             currentChatId: null,
                             canCheck: 'CanInvite',
-                            title: const Text('Add Chat'),
+                            title: Text(L10n.of(context).addChat),
                           );
                           if (newSpace != null) {
                             if (!_roomIds.contains(newSpace)) {
@@ -143,7 +151,7 @@ class _CreateSuperInviteTokenPageConsumerState
                             }
                           }
                         },
-                        child: const Text('Add Chat'),
+                        child: Text(L10n.of(context).addChat),
                       ),
                     ],
                   ),
@@ -171,17 +179,20 @@ class _CreateSuperInviteTokenPageConsumerState
           itemCount: _roomIds.length,
         ),
       ],
-      confirmActionTitle: isEdit ? 'Save' : 'Create Code',
+      confirmActionTitle:
+          isEdit ? L10n.of(context).save : L10n.of(context).createCode,
       confirmActionKey: CreateSuperInviteTokenPage.submitBtn,
       confirmActionOnPressed: _submit,
-      cancelActionTitle: 'Cancel',
+      cancelActionTitle: L10n.of(context).cancel,
       cancelActionOnPressed: () =>
           context.canPop() ? context.pop() : context.goNamed(Routes.main.name),
     );
   }
 
   Future<void> _submit() async {
-    EasyLoading.show(status: isEdit ? 'Saving code' : 'Creating code');
+    final status =
+        isEdit ? L10n.of(context).savingCode : L10n.of(context).creatingCode;
+    EasyLoading.show(status: status);
     try {
       final tokenTxt = _tokenController.text;
       if (tokenTxt.isNotEmpty) {
@@ -192,17 +203,17 @@ class _CreateSuperInviteTokenPageConsumerState
       await provider.createOrUpdateToken(tokenUpdater);
       ref.invalidate(superInvitesTokensProvider);
       EasyLoading.dismiss();
-      // We are doing as expected, but the lints triggers.
-      // ignore: use_build_context_synchronously
-      if (!context.mounted) {
-        return;
-      }
+      if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // pop the create sheet
     } catch (err) {
-      EasyLoading.showError(
-        isEdit ? 'Saving code failed $err' : 'Creating code failed $err',
-        duration: const Duration(seconds: 3),
-      );
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      final status = isEdit
+          ? L10n.of(context).saveInviteCodeFailed(err)
+          : L10n.of(context).createInviteCodeFailed(err);
+      EasyLoading.showError(status, duration: const Duration(seconds: 3));
     }
   }
 
@@ -211,59 +222,35 @@ class _CreateSuperInviteTokenPageConsumerState
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
-          title: const Text('Delete code'),
-          content: const Text(
-            "Do you really want to irreversibly delete the super invite code? It can't be used again after.",
+          title: Text(L10n.of(context).deleteCode),
+          content: Text(
+            L10n.of(context).doYouWantToDeleteInviteCode,
           ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
           actions: <Widget>[
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: TextButton(
-                      onPressed: () => ctx.pop(),
-                      child: const Text(
-                        'No',
-                        style: TextStyle(color: Colors.white, fontSize: 17),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      border: Border.all(color: Colors.red),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: TextButton(
-                      key: CreateSuperInviteTokenPage.deleteConfirm,
-                      onPressed: () async {
-                        ctx.pop(true);
-                      },
-                      child: const Text(
-                        'Delete ',
-                        style: TextStyle(color: Colors.white, fontSize: 17),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            OutlinedButton(
+                onPressed: () => ctx.pop(),
+                child: Text(
+                  L10n.of(context).no,
+                ),),
+            ActerDangerActionButton(
+              key: CreateSuperInviteTokenPage.deleteConfirm,
+              onPressed: () async {
+                ctx.pop(true);
+              },
+              child: Text(
+                L10n.of(context).delete,
+              ),
             ),
           ],
         );
       },
     );
-    if (confirm != true) {
+    if (confirm != true || !context.mounted) {
       return;
     }
 
-    EasyLoading.show(status: 'Deleting code');
+    EasyLoading.show(status: L10n.of(context).deletingCode);
     try {
       final tokenTxt = _tokenController.text;
       // all other changes happen on the object itself;
@@ -271,15 +258,15 @@ class _CreateSuperInviteTokenPageConsumerState
       await provider.delete(tokenTxt);
       ref.invalidate(superInvitesTokensProvider);
       EasyLoading.dismiss();
-      // We are doing as expected, but the lints triggers.
-      // ignore: use_build_context_synchronously
-      if (!context.mounted) {
-        return;
-      }
+      if (!context.mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // pop the create sheet
     } catch (err) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
       EasyLoading.showError(
-        'Deleting code failed $err',
+        L10n.of(context).deleteInviteCodeFailed(err),
         duration: const Duration(seconds: 3),
       );
     }

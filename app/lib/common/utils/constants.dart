@@ -29,6 +29,7 @@ class Keys {
   static const newsSectionBtn = Key('news-section-btn');
   static const sidebarBtn = Key('sidebar-btn');
   static const logoutBtn = Key('login-btn');
+  static const exploreBtn = Key('explore-btn');
   static const skipBtn = Key('skip-btn');
   static const loginBtn = Key('login-btn');
   static const avatar = Key('user-avatar');
@@ -57,7 +58,8 @@ const giphyKey = String.fromEnvironment(
 
 const defaultServersStr = String.fromEnvironment(
   'DEFAULT_SEARCH_SERVER',
-  defaultValue: 'acter.global=Acter.global,matrix.org=Matrix.org',
+  defaultValue:
+      'acter.global=Acter.global,matrix.org=Matrix.org,matrixrooms.info=Global Search,the-apothecary.club=The Apothecary Club,systemausfall.org=Systemausfall,gitter.im=Gitter.IM',
 );
 
 final defaultServers = parseServers(defaultServersStr);
@@ -67,9 +69,6 @@ const List<TargetPlatform> desktopPlatforms = [
   TargetPlatform.linux,
   TargetPlatform.windows,
 ];
-
-// hide bottom nav at locations.
-const List<String> hideNavLocations = ['/updates/post', '/updates/edit'];
 
 class ServerEntry {
   final String value;

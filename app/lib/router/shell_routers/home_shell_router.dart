@@ -5,6 +5,8 @@ import 'package:acter/features/events/pages/event_details_page.dart';
 import 'package:acter/features/home/pages/dashboard.dart';
 import 'package:acter/features/pins/pages/pin_page.dart';
 import 'package:acter/features/pins/pages/pins_page.dart';
+import 'package:acter/features/settings/pages/backup_page.dart';
+import 'package:acter/features/settings/pages/chat_settings_page.dart';
 import 'package:acter/features/settings/pages/language_select_page.dart';
 import 'package:acter/features/settings/pages/settings_page.dart';
 import 'package:acter/features/profile/pages/my_profile_page.dart';
@@ -21,13 +23,13 @@ import 'package:acter/features/space/pages/events_page.dart';
 import 'package:acter/features/space/pages/members_page.dart';
 import 'package:acter/features/space/pages/overview_page.dart';
 import 'package:acter/features/space/pages/pins_page.dart';
-import 'package:acter/features/space/pages/related_spaces_page.dart';
+import 'package:acter/features/space/pages/sub_spaces_page.dart';
 import 'package:acter/features/space/pages/tasks_page.dart';
 import 'package:acter/features/space/providers/space_navbar_provider.dart';
 import 'package:acter/features/space/settings/pages/apps_settings_page.dart';
 import 'package:acter/features/space/settings/pages/index_page.dart';
 import 'package:acter/features/space/settings/pages/notification_configuration_page.dart';
-import 'package:acter/features/spaces/pages/join_space.dart';
+import 'package:acter/features/public_room_search/pages/search_public_directory.dart';
 import 'package:acter/features/spaces/pages/spaces_page.dart';
 import 'package:acter/features/tasks/pages/task_list_page.dart';
 import 'package:acter/features/tasks/pages/task_page.dart';
@@ -87,6 +89,17 @@ List<RouteBase> makeHomeShellRoutes(ref) {
       },
     ),
     GoRoute(
+      name: Routes.settingsChat.name,
+      path: Routes.settingsChat.route,
+      redirect: authGuardRedirect,
+      pageBuilder: (context, state) {
+        return NoTransitionPage(
+          key: state.pageKey,
+          child: const ChatSettingsPage(),
+        );
+      },
+    ),
+    GoRoute(
       name: Routes.settingNotifications.name,
       path: Routes.settingNotifications.route,
       redirect: authGuardRedirect,
@@ -142,6 +155,17 @@ List<RouteBase> makeHomeShellRoutes(ref) {
       },
     ),
     GoRoute(
+      name: Routes.settingBackup.name,
+      path: Routes.settingBackup.route,
+      redirect: authGuardRedirect,
+      pageBuilder: (context, state) {
+        return NoTransitionPage(
+          key: state.pageKey,
+          child: const BackupPage(),
+        );
+      },
+    ),
+    GoRoute(
       name: Routes.settingLanguage.name,
       path: Routes.settingLanguage.route,
       redirect: authGuardRedirect,
@@ -183,7 +207,7 @@ List<RouteBase> makeHomeShellRoutes(ref) {
         tabKeyNotifier.switchTo(const Key('spaces'));
         return NoTransitionPage(
           key: state.pageKey,
-          child: RelatedSpacesPage(
+          child: SubSpacesPage(
             spaceIdOrAlias: state.pathParameters['spaceId']!,
           ),
         );
@@ -274,13 +298,15 @@ List<RouteBase> makeHomeShellRoutes(ref) {
       },
     ),
     GoRoute(
-      name: Routes.joinSpace.name,
-      path: Routes.joinSpace.route,
+      name: Routes.searchPublicDirectory.name,
+      path: Routes.searchPublicDirectory.route,
       redirect: authGuardRedirect,
       pageBuilder: (context, state) {
         return NoTransitionPage(
           key: state.pageKey,
-          child: const JoinSpacePage(),
+          child: SearchPublicDirectory(
+            query: state.uri.queryParameters['query'],
+          ),
         );
       },
     ),

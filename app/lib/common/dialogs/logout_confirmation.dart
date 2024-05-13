@@ -1,4 +1,6 @@
 import 'package:acter/common/models/keys.dart';
+import 'package:acter/common/toolkit/buttons/danger_action_button.dart';
+
 import 'package:acter/features/onboarding/providers/onboarding_providers.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +17,9 @@ void logoutConfirmationDialog(BuildContext context, WidgetRef ref) {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Atlas.warning,
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(
               height: 10,
@@ -27,58 +29,36 @@ void logoutConfirmationDialog(BuildContext context, WidgetRef ref) {
         ),
         content: RichText(
           textAlign: TextAlign.left,
-          text: const TextSpan(
-            text: 'Attention: ',
-            style: TextStyle(color: Colors.white, fontSize: 15),
+          text: TextSpan(
+            text: L10n.of(context).logOutConformationDescription1,
+            style: Theme.of(context).textTheme.bodyLarge,
             children: <TextSpan>[
               TextSpan(
-                text:
-                    'Logging out removes the local data, including encryption keys. If this is your last signed-in device you might no be able to decrypt any previous content.',
+                text: L10n.of(context).logOutConformationDescription2,
               ),
-              TextSpan(text: 'Are you sure you want to log out?'),
+              TextSpan(
+                text: L10n.of(context).logOutConformationDescription3,
+              ),
             ],
           ),
         ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: <Widget>[
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: const Text(
-                      'No',
-                      key: LogoutDialogKeys.cancel,
-                      style: TextStyle(color: Colors.white, fontSize: 17),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    border: Border.all(color: Colors.red),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextButton(
-                    onPressed: () async {
-                      await ref.read(authStateProvider.notifier).logout(ctx);
-                    },
-                    child: const Text(
-                      'Yes',
-                      key: LogoutDialogKeys.confirm,
-                      style: TextStyle(color: Colors.white, fontSize: 17),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          OutlinedButton(
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: Text(
+              L10n.of(context).no,
+              key: LogoutDialogKeys.cancel,
+            ),
+          ),
+          ActerDangerActionButton(
+            onPressed: () async {
+              await ref.read(authStateProvider.notifier).logout(ctx);
+            },
+            child: Text(
+              L10n.of(context).yes,
+              key: LogoutDialogKeys.confirm,
+            ),
           ),
         ],
       );

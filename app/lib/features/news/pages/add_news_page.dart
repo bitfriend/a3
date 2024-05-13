@@ -2,30 +2,30 @@ import 'dart:io';
 
 import 'package:acter/common/providers/sdk_provider.dart';
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/snackbars/custom_msg.dart';
+
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/acter_video_player.dart';
 import 'package:acter/common/widgets/html_editor.dart';
 import 'package:acter/features/events/providers/event_providers.dart';
-import 'package:acter/features/events/widgets/events_item.dart';
+import 'package:acter/features/events/widgets/event_item.dart';
 import 'package:acter/features/events/widgets/skeletons/event_item_skeleton_widget.dart';
-import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:acter/features/news/model/keys.dart';
 import 'package:acter/features/news/model/news_references_model.dart';
 import 'package:acter/features/news/model/news_slide_model.dart';
 import 'package:acter/features/news/news_utils/news_utils.dart';
+import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:acter/features/news/providers/news_post_editor_providers.dart';
 import 'package:acter/features/news/providers/news_providers.dart';
-import 'package:acter/features/news/widgets/news_post_editor/select_action_item.dart';
 import 'package:acter/features/news/widgets/news_post_editor/news_slide_options.dart';
+import 'package:acter/features/news/widgets/news_post_editor/select_action_item.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:atlas_icons/atlas_icons.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -147,17 +147,16 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
       context: context,
       builder: (context) {
         return AlertDialog.adaptive(
-          title: const Text('Add an action widget'),
+          title: Text(L10n.of(context).addActionWidget),
           content: SelectActionItem(
             onShareEventSelected: () async {
               Navigator.of(context, rootNavigator: true).pop();
               if (ref.read(newsStateProvider).newsPostSpaceId == null) {
-                customMsgSnackbar(context, 'Please first select a space');
+                EasyLoading.showToast(L10n.of(context).pleaseFirstSelectASpace);
                 return;
               }
-              await ref
-                  .read(newsStateProvider.notifier)
-                  .selectEventToShare(context);
+              final notifier = ref.read(newsStateProvider.notifier);
+              await notifier.selectEventToShare(context);
             },
           ),
         );
@@ -233,7 +232,7 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
                   loading: () =>
                       const SizedBox(width: 300, child: EventItemSkeleton()),
                   error: (e, s) => Center(
-                    child: Text('Event failed: $e'),
+                    child: Text(L10n.of(context).failedToLoadEvent(e)),
                   ),
                 ),
         ],
@@ -250,13 +249,13 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
         children: [
           SvgPicture.asset(
             'assets/images/empty_updates.svg',
-            semanticsLabel: 'state',
+            semanticsLabel: L10n.of(context).state,
             height: 150,
             width: 150,
           ),
           const SizedBox(height: 20),
           Text(
-            'Create actionable posts and engage everyone within your space.',
+            L10n.of(context).createPostsAndEngageWithinSpace,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
@@ -264,19 +263,19 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
           OutlinedButton(
             key: NewsUpdateKeys.addTextSlide,
             onPressed: () => NewsUtils.addTextSlide(ref),
-            child: const Text('Add text slide'),
+            child: Text(L10n.of(context).addTextSlide),
           ),
           const SizedBox(height: 20),
           OutlinedButton(
             key: NewsUpdateKeys.addImageSlide,
             onPressed: () async => await NewsUtils.addImageSlide(ref),
-            child: const Text('Add image slide'),
+            child: Text(L10n.of(context).addImageSlide),
           ),
           const SizedBox(height: 20),
           OutlinedButton(
             key: NewsUpdateKeys.addVideoSlide,
             onPressed: () async => await NewsUtils.addVideoSlide(ref),
-            child: const Text('Add video slide'),
+            child: Text(L10n.of(context).addVideoSlide),
           ),
         ],
       ),
@@ -341,13 +340,14 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
     final client = ref.read(alwaysClientProvider);
     final spaceId = ref.read(newsStateProvider).newsPostSpaceId;
     final newsSlideList = ref.read(newsStateProvider).newsSlideList;
+    final lang = L10n.of(context);
 
     if (spaceId == null) {
-      customMsgSnackbar(context, 'Please first select a space');
+      EasyLoading.showToast(L10n.of(context).pleaseFirstSelectASpace);
       return;
     }
 
-    String displayMsg = 'Slide posting';
+    String displayMsg = L10n.of(context).slidePosting;
     // Show loading message
     EasyLoading.show(status: displayMsg);
     try {
@@ -358,7 +358,14 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
         // If slide type is text
         if (slidePost.type == NewsSlideType.text) {
           if (slidePost.text == null || slidePost.text!.trim().isEmpty) {
-            EasyLoading.showError('Your text slides must contains some text');
+            if (!context.mounted) {
+              EasyLoading.dismiss();
+              return;
+            }
+            EasyLoading.showError(
+              L10n.of(context).yourTextSlidesMustContainsSomeText,
+              duration: const Duration(seconds: 3),
+            );
             return;
           }
           final textDraft = slidePost.html != null
@@ -367,10 +374,7 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
           final textSlideDraft = textDraft.intoNewsSlideDraft();
 
           textSlideDraft.color(
-            sdk.api.newColorizeBuilder(
-              null,
-              slidePost.backgroundColor?.value,
-            ),
+            sdk.api.newColorizeBuilder(null, slidePost.backgroundColor?.value),
           );
 
           if (slidePost.newsReferencesModel != null) {
@@ -385,13 +389,15 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
             slidePost.mediaFile != null) {
           final file = slidePost.mediaFile!;
           String? mimeType = file.mimeType ?? lookupMimeType(file.path);
-          if (mimeType == null) {
-            EasyLoading.showError('Invalid media format');
-            return;
-          }
+          if (mimeType == null) throw lang.failedToDetectMimeType;
           if (!mimeType.startsWith('image/')) {
+            if (!context.mounted) {
+              EasyLoading.dismiss();
+              return;
+            }
             EasyLoading.showError(
-              'Posting of $mimeType not yet supported',
+              L10n.of(context).postingOfTypeNotYetSupported(mimeType),
+              duration: const Duration(seconds: 3),
             );
             return;
           }
@@ -404,10 +410,7 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
               .height(decodedImage.height);
           final imageSlideDraft = imageDraft.intoNewsSlideDraft();
           imageSlideDraft.color(
-            sdk.api.newColorizeBuilder(
-              null,
-              slidePost.backgroundColor?.value,
-            ),
+            sdk.api.newColorizeBuilder(null, slidePost.backgroundColor?.value),
           );
           if (slidePost.newsReferencesModel != null) {
             final objRef = getSlideReference(sdk, slidePost);
@@ -421,13 +424,15 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
             slidePost.mediaFile != null) {
           final file = slidePost.mediaFile!;
           String? mimeType = file.mimeType ?? lookupMimeType(file.path);
-          if (mimeType == null) {
-            EasyLoading.showError('Invalid media format');
-            return;
-          }
+          if (mimeType == null) throw lang.failedToDetectMimeType;
           if (!mimeType.startsWith('video/')) {
+            if (!context.mounted) {
+              EasyLoading.dismiss();
+              return;
+            }
             EasyLoading.showError(
-              'Posting of $mimeType not yet supported',
+              L10n.of(context).postingOfTypeNotYetSupported(mimeType),
+              duration: const Duration(seconds: 3),
             );
             return;
           }
@@ -436,10 +441,7 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
               client.videoDraft(file.path, mimeType).size(bytes.length);
           final videoSlideDraft = videoDraft.intoNewsSlideDraft();
           videoSlideDraft.color(
-            sdk.api.newColorizeBuilder(
-              null,
-              slidePost.backgroundColor?.value,
-            ),
+            sdk.api.newColorizeBuilder(null, slidePost.backgroundColor?.value),
           );
           if (slidePost.newsReferencesModel != null) {
             final objRef = getSlideReference(sdk, slidePost);
@@ -453,11 +455,7 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
       // close loading
       EasyLoading.dismiss();
 
-      // We are doing as expected, but the lints triggers.
-      // ignore: use_build_context_synchronously
-      if (!context.mounted) {
-        return;
-      }
+      if (!context.mounted) return;
       // FIXME due to #718. well lets at least try forcing a refresh upon route.
       ref.invalidate(newsListProvider);
       ref.invalidate(newsStateProvider);
@@ -465,7 +463,14 @@ class AddNewsState extends ConsumerState<AddNewsPage> {
       Navigator.of(context).pop();
       context.goNamed(Routes.main.name); // go to the home / main updates
     } catch (err) {
-      EasyLoading.showError('$displayMsg failed: \n $err');
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        '$displayMsg ${L10n.of(context).failed}: \n $err',
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 

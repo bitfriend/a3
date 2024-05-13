@@ -113,7 +113,6 @@ pub async fn ensure_user(
             user_id,
             password.clone(),
             None,
-            None,
             user_agent.clone(),
             token,
         )
@@ -124,7 +123,6 @@ pub async fn ensure_user(
             config.clone(),
             user_id,
             password.clone(),
-            None,
             None,
             user_agent.clone(),
         )

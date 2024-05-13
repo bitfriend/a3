@@ -1,12 +1,14 @@
 import 'package:acter/common/providers/common_providers.dart';
+import 'package:acter/common/providers/room_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/utils/routes.dart';
+import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/widgets/default_bottom_sheet.dart';
 import 'package:acter/common/widgets/like_button.dart';
 import 'package:acter/common/widgets/redact_content.dart';
 import 'package:acter/common/widgets/report_content.dart';
 import 'package:acter/features/news/model/keys.dart';
 import 'package:acter/features/news/providers/news_providers.dart';
+import 'package:acter/router/utils.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart' as ffi;
 import 'package:atlas_icons/atlas_icons.dart';
@@ -15,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 final _log = Logger('a3::news::sidebar');
 
@@ -34,7 +37,7 @@ class NewsSideBar extends ConsumerWidget {
     final userId = ref.watch(myUserIdStrProvider);
     final isLikedByMe = ref.watch(likedByMeProvider(news));
     final likesCount = ref.watch(totalLikesForNewsProvider(news));
-    final space = ref.watch(briefSpaceItemWithMembershipProvider(roomId));
+    final space = ref.watch(briefSpaceItemProvider(roomId));
     final style = Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13);
 
     return Column(
@@ -45,7 +48,7 @@ class NewsSideBar extends ConsumerWidget {
           isLiked: isLikedByMe.valueOrNull ?? false,
           likeCount: likesCount.valueOrNull ?? 0,
           style: style,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.textColor,
           index: index,
           onTap: () async {
             final manager = await ref.read(newsReactionsProvider(news).future);
@@ -69,7 +72,6 @@ class NewsSideBar extends ConsumerWidget {
                   news: news,
                   userId: userId,
                   roomId: roomId,
-                  membership: space.membership!,
                 ),
               ),
             ),
@@ -95,12 +97,7 @@ class NewsSideBar extends ConsumerWidget {
               avatar: space.spaceProfileData.getAvatarImage(),
             ),
             size: 42,
-            onAvatarTap: () {
-              context.pushNamed(
-                Routes.space.name,
-                pathParameters: {'spaceId': roomId},
-              );
-            },
+            onAvatarTap: () => goToSpace(context, roomId),
           ),
           error: (e, st) {
             _log.severe('Error loading space', e, st);
@@ -154,21 +151,23 @@ class ActionBox extends ConsumerWidget {
   final String userId;
   final ffi.NewsEntry news;
   final String roomId;
-  final ffi.Member membership;
 
   const ActionBox({
     super.key,
     required this.news,
     required this.userId,
     required this.roomId,
-    required this.membership,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final senderId = news.sender().toString();
+    final membership = ref.watch(roomMembershipProvider(roomId)).valueOrNull;
     final isAuthor = senderId == userId;
-    List<Widget> actions = [const Text('Actions'), const Divider()];
+    List<Widget> actions = [
+      Text(L10n.of(context).actions),
+      const Divider(),
+    ];
 
     if (!isAuthor) {
       actions.add(
@@ -177,29 +176,30 @@ class ActionBox extends ConsumerWidget {
           onPressed: () => showAdaptiveDialog(
             context: context,
             builder: (context) => ReportContentWidget(
-              title: 'Report this post',
+              title: L10n.of(context).reportThisPost,
               eventId: news.eventId().toString(),
-              description:
-                  'Report this post to your homeserver administrator. Please note that administrator would\'t be able to read or view any files in encrypted spaces.',
+              description: L10n.of(context).reportPostContent,
               senderId: senderId,
               roomId: roomId,
               isSpace: true,
             ),
           ),
           icon: const Icon(Atlas.exclamation_chat_thin),
-          label: const Text('Report this'),
+          label: Text(L10n.of(context).reportThis),
         ),
       );
     }
 
-    if (isAuthor && membership.canString('CanRedactOwn')) {
+    if (isAuthor &&
+        membership != null &&
+        membership.canString('CanRedactOwn')) {
       actions.add(
         TextButton.icon(
           key: NewsUpdateKeys.newsSidebarActionRemoveBtn,
           onPressed: () => showAdaptiveDialog(
             context: context,
             builder: (context) => RedactContentWidget(
-              title: 'Remove this post',
+              title: L10n.of(context).removeThisPost,
               eventId: news.eventId().toString(),
               onSuccess: () {
                 context.pop();
@@ -212,7 +212,7 @@ class ActionBox extends ConsumerWidget {
             ),
           ),
           icon: const Icon(Atlas.trash_thin),
-          label: const Text('Remove'),
+          label: Text(L10n.of(context).remove),
         ),
       );
     }

@@ -5,7 +5,7 @@ use std::ops::Deref;
 
 use super::{
     super::{default_model_execute, ActerModel, AnyActerModel, Capability, EventMeta, Store},
-    TaskList, KEYS,
+    KEYS,
 };
 use crate::{
     events::tasks::{
@@ -93,10 +93,6 @@ impl Task {
             task: self.meta.event_id.clone().into(),
         }
     }
-
-    pub fn key_from_event(event_id: &EventId) -> String {
-        event_id.to_string()
-    }
 }
 
 impl ActerModel for Task {
@@ -117,6 +113,9 @@ impl ActerModel for Task {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     fn capabilities(&self) -> &[Capability] {
         &[
@@ -131,9 +130,7 @@ impl ActerModel for Task {
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![TaskList::key_from_event(
-            &self.inner.task_list_id.event_id,
-        )])
+        Some(vec![self.inner.task_list_id.event_id.to_string()])
     }
 
     fn transition(&mut self, model: &AnyActerModel) -> Result<bool> {
@@ -164,6 +161,7 @@ impl From<OriginalMessageLikeEvent<TaskEventContent>> for Task {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }
@@ -183,13 +181,16 @@ impl ActerModel for TaskUpdate {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
         default_model_execute(store, self.into()).await
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![Task::key_from_event(&self.inner.task.event_id)])
+        Some(vec![self.inner.task.event_id.to_string()])
     }
 }
 
@@ -217,6 +218,7 @@ impl From<OriginalMessageLikeEvent<TaskUpdateEventContent>> for TaskUpdate {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }
@@ -247,13 +249,16 @@ impl ActerModel for TaskSelfAssign {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
         default_model_execute(store, self.into()).await
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![Task::key_from_event(&self.inner.task.event_id)])
+        Some(vec![self.inner.task.event_id.to_string()])
     }
 }
 
@@ -274,6 +279,7 @@ impl From<OriginalMessageLikeEvent<TaskSelfAssignEventContent>> for TaskSelfAssi
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }
@@ -302,13 +308,16 @@ impl ActerModel for TaskSelfUnassign {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
         default_model_execute(store, self.into()).await
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![Task::key_from_event(&self.inner.task.event_id)])
+        Some(vec![self.inner.task.event_id.to_string()])
     }
 }
 
@@ -329,6 +338,7 @@ impl From<OriginalMessageLikeEvent<TaskSelfUnassignEventContent>> for TaskSelfUn
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }

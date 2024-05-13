@@ -1,25 +1,22 @@
 import 'package:acter/common/providers/space_providers.dart';
+import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/utils/utils.dart';
 import 'package:acter/features/home/pages/home_shell.dart';
 import 'package:acter/features/search/model/keys.dart';
-import 'package:acter/features/search/model/util.dart';
 import 'package:acter/features/settings/providers/settings_providers.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:logging/logging.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 final _log = Logger('a3::search::quick_actions_builder');
 
 class QuickActionsBuilder extends ConsumerWidget {
-  final NavigateTo navigateTo;
-
   const QuickActionsBuilder({
     super.key,
-    required this.navigateTo,
   });
 
   @override
@@ -34,8 +31,7 @@ class QuickActionsBuilder extends ConsumerWidget {
     final canPostPinProvider = ref.watch(
       hasSpaceWithPermissionProvider('CanPostPin'),
     );
-    final canPostPin =
-        isActive(LabsFeature.pins) && (canPostPinProvider.valueOrNull ?? false);
+    final canPostPin = canPostPinProvider.valueOrNull ?? false;
 
     final canPostEventProvider = ref.watch(
       hasSpaceWithPermissionProvider('CanPostEvent'),
@@ -43,8 +39,7 @@ class QuickActionsBuilder extends ConsumerWidget {
     final canCreateTaskListProvider = ref.watch(
       hasSpaceWithPermissionProvider('CanPostTaskList'),
     );
-    final canPostEvent = isActive(LabsFeature.events) &&
-        (canPostEventProvider.valueOrNull ?? false);
+    final canPostEvent = (canPostEventProvider.valueOrNull ?? false);
     final canPostTaskList = isActive(LabsFeature.tasks) &&
         (canCreateTaskListProvider.valueOrNull ?? false);
     return Wrap(
@@ -57,13 +52,13 @@ class QuickActionsBuilder extends ConsumerWidget {
               ? OutlinedButton.icon(
                   key: QuickJumpKeys.createUpdateAction,
                   onPressed: () =>
-                      navigateTo(Routes.actionAddUpdate, push: true),
+                      context.pushNamed(Routes.actionAddUpdate.name),
                   icon: const Icon(
                     Atlas.plus_circle_thin,
                     size: 18,
                   ),
                   label: Text(
-                    'Update',
+                    L10n.of(context).update,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
@@ -71,13 +66,13 @@ class QuickActionsBuilder extends ConsumerWidget {
           canPostPin
               ? OutlinedButton.icon(
                   key: QuickJumpKeys.createPinAction,
-                  onPressed: () => navigateTo(Routes.actionAddPin, push: true),
+                  onPressed: () => context.pushNamed(Routes.actionAddPin.name),
                   icon: const Icon(
                     Atlas.plus_circle_thin,
                     size: 18,
                   ),
                   label: Text(
-                    'Pin',
+                    L10n.of(context).pin,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
@@ -85,10 +80,10 @@ class QuickActionsBuilder extends ConsumerWidget {
           canPostEvent
               ? OutlinedButton.icon(
                   key: QuickJumpKeys.createEventAction,
-                  onPressed: () => navigateTo(Routes.createEvent, push: true),
+                  onPressed: () => context.pushNamed(Routes.createEvent.name),
                   icon: const Icon(Atlas.plus_circle_thin, size: 18),
                   label: Text(
-                    'Event',
+                    L10n.of(context).event,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
@@ -97,10 +92,10 @@ class QuickActionsBuilder extends ConsumerWidget {
               ? OutlinedButton.icon(
                   key: QuickJumpKeys.createTaskListAction,
                   onPressed: () =>
-                      navigateTo(Routes.actionAddTaskList, push: true),
+                      context.pushNamed(Routes.actionAddTaskList.name),
                   icon: const Icon(Atlas.plus_circle_thin, size: 18),
                   label: Text(
-                    'Task List',
+                    L10n.of(context).taskList,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
@@ -112,17 +107,13 @@ class QuickActionsBuilder extends ConsumerWidget {
                   },
                   icon: const Icon(Atlas.plus_circle_thin, size: 18),
                   label: Text(
-                    'Poll',
+                    L10n.of(context).poll,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
               : null,
           isActive(LabsFeature.discussions)
               ? OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(width: 2, color: Colors.white),
-                  ),
                   onPressed: () {
                     _log.info('Discussion pressed');
                   },
@@ -131,7 +122,7 @@ class QuickActionsBuilder extends ConsumerWidget {
                     size: 18,
                   ),
                   label: Text(
-                    'Discussion',
+                    L10n.of(context).discussion,
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                 )
@@ -139,24 +130,23 @@ class QuickActionsBuilder extends ConsumerWidget {
           OutlinedButton.icon(
             key: QuickJumpKeys.bugReport,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.greenAccent,
-              side: const BorderSide(width: 1, color: Colors.greenAccent),
+              foregroundColor: Theme.of(context).colorScheme.textHighlight,
+              side: BorderSide(
+                width: 1,
+                color: Theme.of(context).colorScheme.textHighlight,
+              ),
             ),
             icon: const Icon(Atlas.bug_clipboard_thin, size: 18),
             label: Text(
-              'Report bug',
+              L10n.of(context).reportBug,
               style: Theme.of(context).textTheme.labelMedium,
             ),
-            onPressed: () => navigateTo(
-              Routes.bugReport,
-              prepare: (context) async {
-                if (context.canPop()) {
-                  context.pop();
-                }
-                await openBugReport(context);
-                return true; // indicate this should stop processing.
-              },
-            ),
+            onPressed: () async {
+              if (context.canPop()) {
+                context.pop();
+              }
+              await openBugReport(context);
+            },
           ),
         ].where((element) => element != null),
       ),

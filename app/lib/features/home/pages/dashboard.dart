@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/themes/colors/color_scheme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/utils/constants.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/utils/utils.dart';
@@ -18,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class Dashboard extends ConsumerWidget {
   const Dashboard({super.key});
@@ -34,9 +37,7 @@ class Dashboard extends ConsumerWidget {
       children.add(const MyTasksSection(limit: 5));
     }
 
-    if (isActive(LabsFeature.events)) {
-      children.add(const MyEventsSection(limit: 5));
-    }
+    children.add(const MyEventsSection(limit: 5));
 
     if (children.isEmpty) {
       children.add(const SliverToBoxAdapter(child: MySpacesSection()));
@@ -65,17 +66,17 @@ class Dashboard extends ConsumerWidget {
       return Center(
         heightFactor: 1.5,
         child: EmptyState(
-          title: 'You are not a member of any space yet',
-          subtitle:
-              'Create or join space, to start organizing and collaborating!',
+          title: L10n.of(context).youAreNotAMemberOfAnySpaceYet,
+          subtitle: L10n.of(context).createOrJoinSpaceDescription,
           image: 'assets/images/empty_home.svg',
-          primaryButton: ElevatedButton(
+          primaryButton: ActerPrimaryActionButton(
             onPressed: () => context.pushNamed(Routes.createSpace.name),
-            child: const Text('Create New Space'),
+            child: Text(L10n.of(context).createNewSpace),
           ),
           secondaryButton: OutlinedButton(
-            onPressed: () => context.pushNamed(Routes.joinSpace.name),
-            child: const Text('Join Existing Space'),
+            onPressed: () =>
+                context.pushNamed(Routes.searchPublicDirectory.name),
+            child: Text(L10n.of(context).joinExistingSpace),
           ),
         ),
       );
@@ -116,8 +117,8 @@ class Dashboard extends ConsumerWidget {
                   ),
                 ],
                 title: isDesktop
-                    ? const Text('My Dashboard')
-                    : const Text('Overview'),
+                    ? Text(L10n.of(context).myDashboard)
+                    : Text(L10n.of(context).overview),
               ),
               ...children,
             ],

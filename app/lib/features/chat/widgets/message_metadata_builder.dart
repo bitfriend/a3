@@ -1,14 +1,17 @@
-import 'package:acter/common/providers/chat_providers.dart';
+import 'package:acter/common/providers/room_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter/features/chat/providers/chat_providers.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart'
     show Convo, EventSendState;
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:quds_popup_menu/quds_popup_menu.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:quds_popup_menu/quds_popup_menu.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 final _log = Logger('a3::chat::message_metadata_builder');
 
@@ -25,10 +28,10 @@ class MessageMetadataBuilder extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final receipts = message.metadata?['receipts'];
     EventSendState? sendState = message.metadata?['eventState'];
-    if (receipts?.isNotEmpty == true) {
+    if (receipts != null && receipts.isNotEmpty == true) {
       return _UserReceiptsWidget(
         roomId: convo.getRoomIdStr(),
-        seenList: (receipts! as Map<String, int>).keys.toList(),
+        seenList: (receipts as Map<String, int>).keys.toList(),
       );
     } else {
       if (sendState != null) {
@@ -43,44 +46,27 @@ class MessageMetadataBuilder extends ConsumerWidget {
             return Row(
               children: <Widget>[
                 GestureDetector(
-                  onTap: () => _handleCancelRetrySend(),
+                  onTap: () => _handleCancelRetrySend(context, ref),
                   child: Text(
-                    'Cancel Send',
+                    L10n.of(context).cancelSend,
                     style: Theme.of(context).textTheme.labelSmall!.copyWith(
                           color: Theme.of(context).colorScheme.neutral5,
                           decoration: TextDecoration.underline,
                         ),
                   ),
                 ),
-                const SizedBox(
-                  width: 10,
-                ),
+                const SizedBox(width: 10),
                 GestureDetector(
-                  onTap: () => _handleRetry(),
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Failed to sent: ${sendState.error()}. ',
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                            color: Theme.of(context).colorScheme.neutral5,
-                          ),
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: 'Retry',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall!
-                              .copyWith(
-                                color: Theme.of(context).colorScheme.neutral5,
-                                decoration: TextDecoration.underline,
-                              ),
+                  onTap: () => _handleRetry(context, ref),
+                  child: Text(
+                    L10n.of(context).retry,
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: Theme.of(context).colorScheme.neutral5,
+                          decoration: TextDecoration.underline,
                         ),
-                      ],
-                    ),
                   ),
                 ),
-                const SizedBox(
-                  width: 5,
-                ),
+                const SizedBox(width: 5),
                 Icon(
                   Atlas.warning_thin,
                   color: Theme.of(context).colorScheme.error,
@@ -96,16 +82,29 @@ class MessageMetadataBuilder extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleRetry() async {
-    final stream = convo.timelineStream();
-    // attempts to retry sending local echo to server
-    await stream.retrySend(message.id);
+  Future<void> _handleRetry(BuildContext context, WidgetRef ref) async {
+    try {
+      final stream = ref.read(timelineStreamProvider(convo));
+      // attempts to retry sending local echo to server
+      await stream.retrySend(message.id);
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      EasyLoading.showError(L10n.of(context).failedToSend(e));
+    }
   }
 
-  Future<void> _handleCancelRetrySend() async {
-    final stream = convo.timelineStream();
-    // cancels the retry sending of local echos
-    await stream.cancelSend(message.id);
+  Future<void> _handleCancelRetrySend(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    try {
+      final stream = ref.read(timelineStreamProvider(convo));
+      // cancels the retry sending of local echos
+      await stream.cancelSend(message.id);
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      EasyLoading.showError(L10n.of(context).failedToSend(e));
+    }
   }
 }
 
@@ -131,20 +130,19 @@ class _UserReceiptsWidget extends ConsumerWidget {
                     Consumer(
                       builder: (context, ref, child) {
                         final memberProfile = ref.watch(
-                          memberProfileByInfoProvider(
-                            (userId: userId, roomId: roomId),
-                          ),
+                          roomMemberProvider((userId: userId, roomId: roomId)),
                         );
                         return memberProfile.when(
-                          data: (profile) {
+                          data: (data) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: ActerAvatar(
                                 mode: DisplayMode.DM,
                                 avatarInfo: AvatarInfo(
                                   uniqueId: userId,
-                                  displayName: profile.displayName ?? userId,
-                                  avatar: profile.getAvatarImage(),
+                                  displayName:
+                                      data.profile.displayName ?? userId,
+                                  avatar: data.profile.getAvatarImage(),
                                 ),
                                 size: 8,
                               ),
@@ -185,21 +183,21 @@ class _UserReceiptsWidget extends ConsumerWidget {
                   (idx) => Consumer(
                     builder: (context, ref, child) {
                       final memberProfile = ref.watch(
-                        memberProfileByInfoProvider(
+                        roomMemberProvider(
                           (userId: seenList[idx], roomId: roomId),
                         ),
                       );
                       final userId = seenList[idx];
                       return memberProfile.when(
-                        data: (profile) {
+                        data: (data) {
                           return Padding(
                             padding: const EdgeInsets.only(right: 10),
                             child: ActerAvatar(
                               mode: DisplayMode.DM,
                               avatarInfo: AvatarInfo(
                                 uniqueId: userId,
-                                displayName: profile.displayName ?? userId,
-                                avatar: profile.getAvatarImage(),
+                                displayName: data.profile.displayName ?? userId,
+                                avatar: data.profile.getAvatarImage(),
                               ),
                               size: 8,
                             ),
@@ -246,7 +244,7 @@ class _UserReceiptsWidget extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'Seen By',
+                  L10n.of(context).seenBy,
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
               ),
@@ -258,21 +256,22 @@ class _UserReceiptsWidget extends ConsumerWidget {
                   return Consumer(
                     builder: (context, ref, child) {
                       final member = ref.watch(
-                        memberProfileByInfoProvider(
+                        roomMemberProvider(
                           (userId: userId, roomId: roomId),
                         ),
                       );
                       return ListTile(
                         leading: member.when(
-                          data: (profile) {
+                          data: (data) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 10),
                               child: ActerAvatar(
                                 mode: DisplayMode.DM,
                                 avatarInfo: AvatarInfo(
                                   uniqueId: seenList[index],
-                                  displayName: profile.displayName ?? userId,
-                                  avatar: profile.getAvatarImage(),
+                                  displayName:
+                                      data.profile.displayName ?? userId,
+                                  avatar: data.profile.getAvatarImage(),
                                 ),
                                 size: 8,
                               ),
@@ -300,7 +299,7 @@ class _UserReceiptsWidget extends ConsumerWidget {
                         ),
                         title: Text(
                           member.hasValue
-                              ? member.requireValue.displayName!
+                              ? member.requireValue.profile.displayName!
                               : userId,
                           style: Theme.of(context).textTheme.labelSmall,
                         ),

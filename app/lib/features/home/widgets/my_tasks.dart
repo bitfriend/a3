@@ -5,6 +5,7 @@ import 'package:acter/features/tasks/widgets/task_entry.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,7 +23,7 @@ class MyTasksSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'My Tasks',
+            L10n.of(context).myTasks,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 10),
@@ -32,7 +33,7 @@ class MyTasksSection extends ConsumerWidget {
                     child: Column(
                       children: [
                         Text(
-                          'Congrats!',
+                          L10n.of(context).congrats,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         Padding(
@@ -44,14 +45,14 @@ class MyTasksSection extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          'you are done with all your tasks!',
+                          L10n.of(context).youAreDoneWithAllYourTasks,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         Padding(
                           padding: const EdgeInsets.all(20),
                           child: OutlinedButton(
                             child: Text(
-                              'see other open tasks',
+                              L10n.of(context).seeOtherOpenTasks,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             onPressed: () =>
@@ -67,18 +68,16 @@ class MyTasksSection extends ConsumerWidget {
                           (task) => TaskEntry(
                             task: task,
                             showBreadCrumb: true,
-                            onDone: () {
-                              EasyLoading.showToast(
-                                'marked as done',
-                                toastPosition: EasyLoadingToastPosition.bottom,
-                              );
-                            },
+                            onDone: () => EasyLoading.showToast(
+                              L10n.of(context).markedAsDone,
+                            ),
                           ),
                         )
                         .toList(),
                   ),
-            error: (error, stack) => Text('Loading tasks failed: $error'),
-            loading: () => const Text('Loading'),
+            error: (error, stack) =>
+                Text(L10n.of(context).loadingTasksFailed(error)),
+            loading: () => Text(L10n.of(context).loading),
           ),
         ],
       ),

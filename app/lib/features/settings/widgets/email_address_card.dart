@@ -1,11 +1,13 @@
 import 'package:acter/common/providers/common_providers.dart';
-import 'package:acter/common/snackbars/custom_msg.dart';
 import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EmailAddressCard extends ConsumerWidget {
@@ -28,9 +30,7 @@ class EmailAddressCard extends ConsumerWidget {
                 Atlas.envelope_check_thin,
                 color: Theme.of(context).colorScheme.success,
               )
-            : const Icon(
-                Atlas.envelope_minus_thin,
-              ),
+            : const Icon(Atlas.envelope_minus_thin),
         title: Text(emailAddress),
         trailing: isConfirmed
             ? PopupMenuButton(
@@ -43,7 +43,7 @@ class EmailAddressCard extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
-                            'Remove',
+                            L10n.of(context).remove,
                             style: Theme.of(ctx).textTheme.labelSmall,
                             softWrap: false,
                           ),
@@ -64,24 +64,28 @@ class EmailAddressCard extends ConsumerWidget {
                       itemBuilder: (BuildContext ctx) => <PopupMenuEntry>[
                         PopupMenuItem(
                           onTap: () => alreadyConfirmedAddress(context, ref),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(Atlas.envelope_check_thin),
+                              const Icon(Atlas.envelope_check_thin),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                child: Text('Already confirmed'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(L10n.of(context).alreadyConfirmed),
                               ),
                             ],
                           ),
                         ),
                         PopupMenuItem(
                           onTap: () => confirmationTokenAddress(context, ref),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(Atlas.passcode_thin),
+                              const Icon(Atlas.passcode_thin),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 10),
-                                child: Text('Confirm with Token'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(L10n.of(context).confirmWithToken),
                               ),
                             ],
                           ),
@@ -96,7 +100,7 @@ class EmailAddressCard extends ConsumerWidget {
                                   horizontal: 10,
                                 ),
                                 child: Text(
-                                  'Remove',
+                                  L10n.of(context).remove,
                                   style: Theme.of(ctx).textTheme.labelSmall,
                                   softWrap: false,
                                 ),
@@ -117,30 +121,23 @@ class EmailAddressCard extends ConsumerWidget {
     showAdaptiveDialog(
       context: context,
       builder: (context) => DefaultDialog(
-        title: const Text(
-          'Are you sure you want to unregister this email address? This action cannot be undone.',
-        ),
+        title: Text(L10n.of(context).areYouSureYouWantToUnregisterEmailAddress),
         actions: <Widget>[
           OutlinedButton(
-            onPressed: () => Navigator.of(
-              context,
-              rootNavigator: true,
-            ).pop(),
-            child: const Text('No'),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: Text(L10n.of(context).no),
           ),
-          ElevatedButton(
+          ActerPrimaryActionButton(
             onPressed: () async {
               final client = ref.read(alwaysClientProvider);
               final manager = client.threePidManager();
               await manager.removeEmailAddress(emailAddress);
               ref.invalidate(emailAddressesProvider);
 
-              if (!context.mounted) {
-                return;
-              }
+              if (!context.mounted) return;
               Navigator.of(context, rootNavigator: true).pop();
             },
-            child: const Text('Yes'),
+            child: Text(L10n.of(context).yes),
           ),
         ],
       ),
@@ -157,18 +154,26 @@ class EmailAddressCard extends ConsumerWidget {
       context: context,
       builder: (BuildContext context) => const PasswordConfirm(),
     );
-    if (newValue != null) {
-      EasyLoading.show(status: 'Trying to confirm token');
-      try {
-        await manager.tryConfirmEmailStatus(emailAddress, newValue);
-        ref.invalidate(emailAddressesProvider);
-        EasyLoading.showSuccess('Looks good. Address confirmed.');
-      } catch (e) {
-        EasyLoading.showError(
-          'Failed to confirm token: $e',
-          duration: const Duration(seconds: 3),
-        );
+    if (!context.mounted) return;
+    if (newValue == null) return;
+    EasyLoading.show(status: L10n.of(context).tryingToConfirmToken);
+    try {
+      await manager.tryConfirmEmailStatus(emailAddress, newValue);
+      ref.invalidate(emailAddressesProvider);
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
       }
+      EasyLoading.showToast(L10n.of(context).looksGoodAddressConfirmed);
+    } catch (e) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToConfirmToken(e),
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 
@@ -182,29 +187,37 @@ class EmailAddressCard extends ConsumerWidget {
       context: context,
       builder: (BuildContext context) => const TokenConfirm(),
     );
-    if (newValue != null) {
-      EasyLoading.show(status: 'Trying to confirm token');
-      try {
-        final result = await manager.submitTokenFromEmail(
-          emailAddress,
-          newValue.token,
-          newValue.password,
-        );
-        if (result) {
-          ref.invalidate(emailAddressesProvider);
-          EasyLoading.showSuccess('Looks good');
-        } else {
-          EasyLoading.showError(
-            'Invalid token or password',
-            duration: const Duration(seconds: 3),
-          );
-        }
-      } catch (e) {
+    if (!context.mounted) return;
+    if (newValue == null) return;
+    EasyLoading.show(status: L10n.of(context).tryingToConfirmToken);
+    try {
+      final result = await manager.submitTokenFromEmail(
+        emailAddress,
+        newValue.token,
+        newValue.password,
+      );
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      if (result) {
+        ref.invalidate(emailAddressesProvider);
+        EasyLoading.showToast(L10n.of(context).looksGoodAddressConfirmed);
+      } else {
         EasyLoading.showError(
-          'Failed to confirm token: $e',
+          L10n.of(context).invalidTokenOrPassword,
           duration: const Duration(seconds: 3),
         );
       }
+    } catch (e) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToConfirmToken(e),
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 }
@@ -231,9 +244,7 @@ class _PasswordConfirmState extends State<PasswordConfirm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
-        'Need your password to confirm ',
-      ),
+      title: Text(L10n.of(context).needYourPasswordToConfirm),
       // The token-reset path is just the process by which control over that email address is confirmed.
       content: Form(
         key: _formKey,
@@ -245,7 +256,7 @@ class _PasswordConfirmState extends State<PasswordConfirm> {
               child: TextFormField(
                 controller: newPassword,
                 decoration: InputDecoration(
-                  hintText: 'Your Password',
+                  hintText: L10n.of(context).yourPassword,
                   suffixIcon: IconButton(
                     onPressed: togglePassword,
                     icon: Icon(
@@ -264,11 +275,11 @@ class _PasswordConfirmState extends State<PasswordConfirm> {
       actions: <Widget>[
         OutlinedButton(
           onPressed: () => Navigator.pop(context, null),
-          child: const Text('Cancel'),
+          child: Text(L10n.of(context).cancel),
         ),
-        ElevatedButton(
+        ActerPrimaryActionButton(
           onPressed: () => onSubmit(context),
-          child: const Text('Submit'),
+          child: Text(L10n.of(context).submit),
         ),
       ],
     );
@@ -281,9 +292,7 @@ class _PasswordConfirmState extends State<PasswordConfirm> {
   }
 
   void onSubmit(BuildContext context) {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     Navigator.pop(context, newPassword.text);
   }
 }
@@ -304,9 +313,7 @@ class _TokenConfirmState extends State<TokenConfirm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(
-        'Confirmation Token',
-      ),
+      title: Text(L10n.of(context).confirmationToken),
       // The token-reset path is just the process by which control over that email address is confirmed.
       content: Form(
         key: _formKey,
@@ -317,7 +324,7 @@ class _TokenConfirmState extends State<TokenConfirm> {
               padding: const EdgeInsets.all(5),
               child: TextFormField(
                 controller: tokenField,
-                decoration: const InputDecoration(hintText: 'Token'),
+                decoration: InputDecoration(hintText: L10n.of(context).token),
               ),
             ),
             Padding(
@@ -325,7 +332,7 @@ class _TokenConfirmState extends State<TokenConfirm> {
               child: TextFormField(
                 controller: newPassword,
                 decoration: InputDecoration(
-                  hintText: 'Your Password',
+                  hintText: L10n.of(context).yourPassword,
                   suffixIcon: IconButton(
                     onPressed: togglePassword,
                     icon: Icon(
@@ -344,11 +351,11 @@ class _TokenConfirmState extends State<TokenConfirm> {
       actions: <Widget>[
         OutlinedButton(
           onPressed: () => Navigator.pop(context, null),
-          child: const Text('Cancel'),
+          child: Text(L10n.of(context).cancel),
         ),
-        ElevatedButton(
+        ActerPrimaryActionButton(
           onPressed: () => onSubmit(context),
-          child: const Text('Submit'),
+          child: Text(L10n.of(context).submit),
         ),
       ],
     );
@@ -362,7 +369,10 @@ class _TokenConfirmState extends State<TokenConfirm> {
 
   void onSubmit(BuildContext context) {
     if (!_formKey.currentState!.validate()) {
-      customMsgSnackbar(context, 'Token and password must be provided');
+      EasyLoading.showError(
+        L10n.of(context).tokenAndPasswordMustBeProvided,
+        duration: const Duration(seconds: 3),
+      );
       return;
     }
     // user can reset password under the same email address

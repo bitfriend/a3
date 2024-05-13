@@ -1,22 +1,22 @@
 import 'dart:io';
 
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/snackbars/custom_msg.dart';
 import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/utils/routes.dart';
-import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:acter/common/widgets/input_text_field.dart';
 import 'package:acter/common/widgets/sliver_scaffold.dart';
+import 'package:acter/router/utils.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-
-import 'package:logging/logging.dart';
 
 final _log = Logger('a3::space::edit');
 
@@ -28,6 +28,7 @@ final editAvatarProvider = StateProvider.autoDispose<String>((ref) => '');
 
 class EditSpacePage extends ConsumerStatefulWidget {
   final String? spaceId;
+
   const EditSpacePage({super.key, required this.spaceId});
 
   @override
@@ -73,19 +74,16 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
   Widget build(BuildContext context) {
     final titleInput = ref.watch(editTitleProvider);
     final avatarUpload = ref.watch(editAvatarProvider);
-    final avatarNotifier = ref.watch(editAvatarProvider.notifier);
     ref.watch(editTopicProvider);
     return SliverScaffold(
-      header: 'Edit Space',
+      header: L10n.of(context).editSpace,
       addActions: true,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'Here you can change the space details',
-            ),
+            Text(L10n.of(context).hereYouCanChangeTheSpaceDetails),
             const SizedBox(height: 15),
             Row(
               children: <Widget>[
@@ -93,18 +91,16 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 5),
-                          child: Text('Avatar'),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: Text(L10n.of(context).avatar),
                         ),
                         const SizedBox(width: 5),
                         avatarUpload.isNotEmpty
                             ? Padding(
                                 padding: const EdgeInsets.only(bottom: 5),
                                 child: GestureDetector(
-                                  onTap: () {
-                                    avatarNotifier.update((state) => '');
-                                  },
+                                  onTap: _clearAvatar,
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: Theme.of(context)
@@ -112,10 +108,7 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
                                           .neutral4,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      size: 14,
-                                    ),
+                                    child: const Icon(Icons.close, size: 14),
                                   ),
                                 ),
                               )
@@ -130,19 +123,19 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 5),
-                        child: Text('Space Name'),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Text(L10n.of(context).spaceName),
                       ),
                       InputTextField(
-                        hintText: 'Type Name',
+                        hintText: L10n.of(context).typeName,
                         textInputType: TextInputType.multiline,
                         controller: _titleController,
                         onInputChanged: _handleTitleChange,
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'eg. Global Movement',
+                        L10n.of(context).egGlobalMovement,
                         style: Theme.of(context).textTheme.labelSmall!.copyWith(
                               color: Theme.of(context).colorScheme.neutral4,
                             ),
@@ -156,11 +149,11 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text('About'),
+                Text(L10n.of(context).about),
                 const SizedBox(height: 15),
                 InputTextField(
                   controller: _topicController,
-                  hintText: 'Description',
+                  hintText: L10n.of(context).description,
                   textInputType: TextInputType.multiline,
                   maxLines: 10,
                   onInputChanged: _handleTopicChange,
@@ -170,52 +163,10 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
           ],
         ),
       ),
-      confirmActionTitle: 'Save Changes',
-      cancelActionTitle: 'Cancel',
-      confirmActionOnPressed: titleInput.trim().isEmpty
-          ? null
-          : () async {
-              // check permissions before updating space
-              bool havePermission = await permissionCheck();
-              if (!havePermission) {
-                // ignore: use_build_context_synchronously
-                customMsgSnackbar(
-                  context,
-                  'Cannot edit space with no permissions',
-                );
-                return;
-              }
-              if (context.mounted) {
-                showAdaptiveDialog(
-                  barrierDismissible: false,
-                  context: context,
-                  builder: (context) => DefaultDialog(
-                    title: Text(
-                      'Updating Space',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    isLoader: true,
-                  ),
-                );
-                final roomId = await _handleUpdateSpace(context);
-                _log.info('Space Updated: $roomId');
-                // We are doing as expected, but the lints triggers.
-                // ignore: use_build_context_synchronously
-                if (!context.mounted) {
-                  return;
-                }
-                context.pop(); // pop the loading screen
-                context.pop(); // pop the edit sheet
-                context.pushNamed(
-                  Routes.space.name,
-                  pathParameters: {
-                    'spaceId': roomId.toString(),
-                  },
-                );
-              }
-            },
-      cancelActionOnPressed: () =>
-          context.canPop() ? context.pop() : context.goNamed(Routes.main.name),
+      confirmActionTitle: L10n.of(context).saveChanges,
+      cancelActionTitle: L10n.of(context).cancel,
+      confirmActionOnPressed: () async => await _handleConfirm(titleInput),
+      cancelActionOnPressed: _handleCancel,
     );
   }
 
@@ -256,7 +207,7 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
 
   void _handleAvatarUpload() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Upload Avatar',
+      dialogTitle: L10n.of(context).uploadAvatar,
       type: FileType.image,
     );
     if (result != null) {
@@ -304,5 +255,52 @@ class _EditSpacePageConsumerState extends ConsumerState<EditSpacePage> {
     _log.info('topic update event: $eventId');
 
     return space.getRoomId();
+  }
+
+  Future<void> _handleConfirm(String titleInput) async {
+    if (titleInput.trim().isEmpty) return;
+    // check permissions before updating space
+    bool havePermission = await permissionCheck();
+    if (!mounted) return;
+    if (!havePermission && context.mounted) {
+      EasyLoading.showError(
+        L10n.of(context).cannotEditSpaceWithNoPermissions,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+    if (!mounted) return;
+    EasyLoading.show(status: L10n.of(context).updatingSpace);
+    try {
+      final roomId = await _handleUpdateSpace(context);
+      _log.info('Space Updated: $roomId');
+      EasyLoading.dismiss();
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      goToSpace(context, roomId.toString());
+    } catch (e, st) {
+      _log.severe('Failed to edit space', e, st);
+      if (!mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToEditSpace(e),
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  void _handleCancel() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.goNamed(Routes.main.name);
+    }
+  }
+
+  void _clearAvatar() {
+    final avatarNotifier = ref.read(editAvatarProvider.notifier);
+    avatarNotifier.update((state) => '');
   }
 }

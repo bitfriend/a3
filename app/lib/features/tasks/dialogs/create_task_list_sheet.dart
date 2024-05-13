@@ -1,12 +1,13 @@
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/snackbars/custom_msg.dart';
-import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/utils/routes.dart';
-import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:acter/common/widgets/md_editor_with_preview.dart';
 import 'package:acter/common/widgets/sliver_scaffold.dart';
 import 'package:acter/common/widgets/spaces/select_space_form_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,7 @@ class CreateTaskListSheet extends ConsumerStatefulWidget {
   static const descKey = Key('task-list-desc');
   static const submitKey = Key('task-list-submit');
   final String? initialSelectedSpace;
+
   const CreateTaskListSheet({super.key, this.initialSelectedSpace});
 
   @override
@@ -40,47 +42,39 @@ class _CreateTaskListSheetConsumerState
   }
 
   Future<void> submitForm(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      DefaultDialog(
-        title: Text(
-          'Posting TaskList',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        isLoader: true,
-      );
-      try {
-        final spaceId = ref.read(selectedSpaceIdProvider);
-        final space = await ref.read(spaceProvider(spaceId!).future);
-        final taskListDraft = space.taskListDraft();
-        final text = ref.read(textProvider);
-        taskListDraft.name(_titleController.text);
-        if (text.isNotEmpty) {
-          taskListDraft.descriptionMarkdown(text);
-        }
-        final taskListId = await taskListDraft.send();
-        // reset providers
-
-        _titleController.text = '';
-        ref.read(textProvider.notifier).state = '';
-
-        // We are doing as expected, but the lints triggers.
-        // ignore: use_build_context_synchronously
-        if (!context.mounted) {
-          return;
-        }
-        Navigator.of(context, rootNavigator: true).pop();
-        context.pushNamed(
-          Routes.taskList.name,
-          pathParameters: {'taskListId': taskListId.toString()},
-        );
-      } catch (e) {
-        // We are doing as expected, but the lints triggers.
-        // ignore: use_build_context_synchronously
-        if (!context.mounted) {
-          return;
-        }
-        customMsgSnackbar(context, 'Failed to create task list: $e');
+    if (!_formKey.currentState!.validate()) return;
+    EasyLoading.show(status: L10n.of(context).postingTaskList);
+    try {
+      final spaceId = ref.read(selectedSpaceIdProvider);
+      final space = await ref.read(spaceProvider(spaceId!).future);
+      final taskListDraft = space.taskListDraft();
+      final text = ref.read(textProvider);
+      taskListDraft.name(_titleController.text);
+      if (text.isNotEmpty) {
+        taskListDraft.descriptionMarkdown(text);
       }
+      final taskListId = await taskListDraft.send();
+      // reset providers
+
+      _titleController.text = '';
+      ref.read(textProvider.notifier).state = '';
+
+      EasyLoading.dismiss();
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      context.pushNamed(
+        Routes.taskList.name,
+        pathParameters: {'taskListId': taskListId.toString()},
+      );
+    } catch (e) {
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToCreateTaskList(e),
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 
@@ -89,7 +83,7 @@ class _CreateTaskListSheetConsumerState
     final textNotifier = ref.watch(textProvider.notifier);
 
     return SliverScaffold(
-      header: 'Create new task list',
+      header: L10n.of(context).createNewTaskList,
       addActions: true,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -107,8 +101,8 @@ class _CreateTaskListSheetConsumerState
                         child: TextFormField(
                           key: CreateTaskListSheet.titleKey,
                           decoration: InputDecoration(
-                            hintText: 'Task list name',
-                            labelText: 'Name',
+                            hintText: L10n.of(context).taskListName,
+                            labelText: L10n.of(context).name,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
@@ -117,7 +111,7 @@ class _CreateTaskListSheetConsumerState
                           controller: _titleController,
                           validator: (value) => (value?.isNotEmpty == true)
                               ? null
-                              : 'Please enter a name',
+                              : L10n.of(context).pleaseEnterAName,
                         ),
                       ),
                     ),
@@ -136,33 +130,19 @@ class _CreateTaskListSheetConsumerState
         ),
       ),
       actions: [
-        ElevatedButton(
+        OutlinedButton(
           onPressed: () => context.canPop()
               ? context.pop()
               : context.goNamed(Routes.main.name),
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-            foregroundColor: Theme.of(context).colorScheme.neutral6,
-            textStyle: Theme.of(context).textTheme.bodySmall,
-          ),
-          child: const Text('Cancel'),
+          child: Text(L10n.of(context).cancel),
         ),
         const SizedBox(width: 10),
-        ElevatedButton(
+        ActerPrimaryActionButton(
           key: CreateTaskListSheet.submitKey,
           onPressed: () async {
             await submitForm(context);
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.success,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-            textStyle: Theme.of(context).textTheme.bodySmall,
-          ),
-          child: const Text('Create task list'),
+          child: Text(L10n.of(context).createTaskList),
         ),
       ],
     );

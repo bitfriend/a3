@@ -1,9 +1,10 @@
+use acter_core::client::CoreClient;
 use anyhow::{bail, Context, Result};
 use futures_signals::signal::{Mutable, MutableSignalCloned, SignalExt, SignalStream};
 use matrix_sdk::{
     event_handler::{Ctx, EventHandlerHandle},
-    room::Room,
-    Client as SdkClient, RoomMemberships, RoomState,
+    room::{Room, RoomMember},
+    RoomMemberships, RoomState,
 };
 use ruma_client_api::user_directory::search_users;
 use ruma_common::{OwnedRoomId, OwnedUserId, RoomId};
@@ -19,11 +20,18 @@ use super::{
 };
 
 #[derive(Clone, Debug)]
+enum Sender {
+    IdOnly(OwnedUserId),
+    Member(RoomMember),
+}
+
+#[derive(Clone, Debug)]
 pub struct Invitation {
-    client: SdkClient,
+    core: CoreClient,
     origin_server_ts: Option<u64>,
+    is_dm: bool,
     room: Room,
-    sender: OwnedUserId,
+    sender: Sender,
 }
 
 impl Invitation {
@@ -31,47 +39,50 @@ impl Invitation {
         self.origin_server_ts
     }
 
+    pub fn room(&self) -> crate::Room {
+        crate::Room::new(self.core.clone(), self.room.clone())
+    }
+
+    pub fn is_dm(&self) -> bool {
+        self.is_dm
+    }
+
     pub fn room_id(&self) -> OwnedRoomId {
         self.room.room_id().to_owned()
     }
 
-    pub async fn room_name(&self) -> Result<String> {
-        let client = self.client.clone();
-        let room_id = self.room.room_id().to_owned();
-        let room = client.get_room(&room_id).context("Room not found")?;
-        if !matches!(room.state(), RoomState::Invited) {
-            bail!("Unable to get a room we are not invited");
+    pub fn room_id_str(&self) -> String {
+        self.room.room_id().to_string()
+    }
+
+    pub fn sender_id(&self) -> OwnedUserId {
+        match &self.sender {
+            Sender::IdOnly(i) => i.clone(),
+            Sender::Member(m) => m.user_id().to_owned(),
         }
-        RUNTIME
-            .spawn(async move {
-                let name = room.display_name().await?;
-                Ok(name.to_string())
-            })
-            .await?
     }
 
-    pub fn sender(&self) -> OwnedUserId {
-        self.sender.clone()
+    pub fn sender_id_str(&self) -> String {
+        match &self.sender {
+            Sender::IdOnly(i) => i.to_string(),
+            Sender::Member(m) => m.user_id().to_string(),
+        }
     }
 
-    pub async fn get_sender_profile(&self) -> Result<UserProfile> {
-        let room = self.room.clone();
-        let sender = self.sender.clone();
-        RUNTIME
-            .spawn(async move {
-                let member = room
-                    .get_member(&sender)
-                    .await?
-                    .context("Unable to find sender in room")?;
-                Ok(UserProfile::from_member(member))
-            })
-            .await?
+    pub fn sender_profile(&self) -> Option<UserProfile> {
+        match &self.sender {
+            Sender::IdOnly(i) => None,
+            Sender::Member(m) => Some(UserProfile::from_member(m.clone())),
+        }
     }
 
     pub async fn accept(&self) -> Result<bool> {
-        let client = self.client.clone();
         let room_id = self.room.room_id().to_owned();
-        let room = client.get_room(&room_id).context("Room not found")?;
+        let room = self
+            .core
+            .client()
+            .get_room(&room_id)
+            .context("Room not found")?;
         if !matches!(room.state(), RoomState::Invited) {
             bail!("Unable to get a room we are not invited");
         }
@@ -105,9 +116,12 @@ impl Invitation {
     }
 
     pub async fn reject(&self) -> Result<bool> {
-        let client = self.client.clone();
         let room_id = self.room.room_id().to_owned();
-        let room = client.get_room(&room_id).context("Room not found")?;
+        let room = self
+            .core
+            .client()
+            .get_room(&room_id)
+            .context("Room not found")?;
         if !matches!(room.state(), RoomState::Invited) {
             bail!("Unable to get a room we are not invited");
         }
@@ -143,49 +157,48 @@ impl Invitation {
 
 #[derive(Clone, Debug)]
 pub(crate) struct InvitationController {
+    core: CoreClient,
     invitations: Mutable<Vec<Invitation>>,
     stripped_event_handle: Option<EventHandlerHandle>,
     sync_event_handle: Option<EventHandlerHandle>,
 }
 
 impl InvitationController {
-    pub fn new() -> Self {
+    pub fn new(core: CoreClient) -> Self {
         InvitationController {
+            core,
             invitations: Default::default(),
             stripped_event_handle: None,
             sync_event_handle: None,
         }
     }
 
-    pub fn add_event_handler(&mut self, client: &SdkClient) {
-        let me = self.clone();
+    pub fn add_event_handler(&mut self) {
+        let client = self.core.client();
 
-        client.add_event_handler_context(me.clone());
+        client.add_event_handler_context(self.clone());
         let handle = client.add_event_handler(
             |ev: StrippedRoomMemberEvent,
              room: Room,
-             c: SdkClient,
              Ctx(me): Ctx<InvitationController>| async move {
                 // user got invitation
-                me.clone().process_stripped_event(ev, room, &c);
+                me.clone().process_stripped_event(ev, room);
             },
         );
         self.stripped_event_handle = Some(handle);
 
-        client.add_event_handler_context(me);
+        client.add_event_handler_context(self.clone());
         let handle = client.add_event_handler(
-            |ev: SyncRoomMemberEvent,
-             room: Room,
-             c: SdkClient,
-             Ctx(me): Ctx<InvitationController>| async move {
+            |ev: SyncRoomMemberEvent, room: Room, Ctx(me): Ctx<InvitationController>| async move {
                 // user accepted or rejected invitation
-                me.clone().process_sync_event(ev, room, &c);
+                me.clone().process_sync_event(ev, room);
             },
         );
         self.sync_event_handle = Some(handle);
     }
 
-    pub fn remove_event_handler(&mut self, client: &SdkClient) {
+    pub fn remove_event_handler(&mut self) {
+        let client = self.core.client();
         if let Some(handle) = self.stripped_event_handle.clone() {
             client.remove_event_handler(handle);
             self.stripped_event_handle = None;
@@ -196,16 +209,23 @@ impl InvitationController {
         }
     }
 
-    pub async fn load_invitations(&self, client: &SdkClient) -> Result<()> {
+    pub async fn load_invitations(&self) -> Result<()> {
         let mut invitations = vec![];
-        for room in client.invited_rooms().iter() {
+        for room in self.core.client().invited_rooms().iter() {
             let details = room.invite_details().await?;
             if let Some(inviter) = details.inviter {
+                let is_dm = details
+                    .invitee
+                    .event()
+                    .as_stripped()
+                    .and_then(|e| e.content.is_direct)
+                    .unwrap_or_default();
                 let invitation = Invitation {
-                    client: client.clone(),
+                    is_dm,
+                    core: self.core.clone(),
                     origin_server_ts: None,
                     room: room.clone(),
-                    sender: inviter.user_id().to_owned(),
+                    sender: Sender::Member(inviter),
                 };
                 invitations.push(invitation);
             }
@@ -214,14 +234,11 @@ impl InvitationController {
         Ok(())
     }
 
-    fn process_stripped_event(
-        &mut self,
-        ev: StrippedRoomMemberEvent,
-        room: Room,
-        client: &SdkClient,
-    ) -> Result<()> {
+    fn process_stripped_event(&mut self, ev: StrippedRoomMemberEvent, room: Room) -> Result<()> {
         // filter only event for me
-        let user_id = client
+        let user_id = self
+            .core
+            .client()
             .user_id()
             .context("You must be logged in to do that")?;
         if ev.state_key != *user_id {
@@ -237,16 +254,19 @@ impl InvitationController {
         if ev.content.membership == MembershipState::Invite {
             let room_id = room.room_id();
             let sender = ev.sender;
+
+            let is_dm = ev.content.is_direct.unwrap_or_default();
             let invitation = Invitation {
-                client: client.clone(),
+                core: self.core.clone(),
+                is_dm,
                 origin_server_ts: Some(since_the_epoch.as_millis() as u64),
                 room: room.clone(),
-                sender: sender.to_owned(),
+                sender: Sender::IdOnly(sender.to_owned()),
             };
             let mut invitations = self.invitations.lock_mut();
             if !invitations
                 .iter()
-                .any(|x| x.room_id() == *room_id && x.sender == *sender)
+                .any(|x| x.room_id() == *room_id && x.sender_id() == *sender)
             {
                 invitations.insert(0, invitation);
             }
@@ -254,10 +274,10 @@ impl InvitationController {
         Ok(())
     }
 
-    fn process_sync_event(&mut self, ev: SyncRoomMemberEvent, room: Room, client: &SdkClient) {
+    fn process_sync_event(&mut self, ev: SyncRoomMemberEvent, room: Room) {
         if let Some(evt) = ev.as_original() {
             // filter only event for me
-            let user_id = client.user_id().expect("UserId needed");
+            let user_id = self.core.client().user_id().expect("UserId needed");
             if evt.clone().state_key != *user_id {
                 return;
             }
@@ -309,19 +329,20 @@ impl Client {
         RUNTIME
             .spawn(async move {
                 let resp = client.search_users(&search_term, 30).await?;
-                Ok(resp
+                let user_profiles = resp
                     .results
                     .into_iter()
                     .map(|inner| {
                         UserProfile::from_search(PublicProfile::new(inner, client.clone()))
                     })
-                    .collect())
+                    .collect();
+                Ok(user_profiles)
             })
             .await?
     }
 
     pub async fn suggested_users_to_invite(&self, room_name: String) -> Result<Vec<UserProfile>> {
-        let client = self.clone();
+        let me = self.clone();
         let room_id = RoomId::parse(room_name)?;
         let Some(room) = self.core.client().get_room(&room_id) else {
             return Ok(vec![]);
@@ -336,7 +357,7 @@ impl Client {
                     .collect::<Vec<OwnedUserId>>();
                 // iterate my rooms to get user list
                 let mut profiles: Vec<UserProfile> = vec![];
-                if let Some(convo) = client.convo_typed(&room_id).await {
+                if let Some(convo) = me.convo_typed(&room_id).await {
                     let members = convo.members(RoomMemberships::ACTIVE).await?;
                     for member in members {
                         let user_id = member.user_id().to_owned();

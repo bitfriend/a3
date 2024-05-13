@@ -1,9 +1,10 @@
+import 'package:acter/common/themes/acter_theme.dart';
 import 'package:acter/common/themes/app_theme.dart';
-import 'package:acter/common/themes/chat_theme.dart';
 import 'package:acter/common/utils/utils.dart';
-import 'package:acter/features/chat/chat_utils/chat_utils.dart';
+import 'package:acter/features/chat/utils.dart';
 import 'package:acter/features/chat/providers/chat_providers.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
+import 'package:acter/features/member/dialogs/show_member_info_drawer.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_link_previewer/flutter_link_previewer.dart';
 import 'package:flutter_matrix_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class TextMessageBuilder extends ConsumerStatefulWidget {
   final Convo convo;
@@ -65,11 +67,13 @@ class _TextMessageBuilderConsumerState
     if (matches.isEmpty) {
       return LinkPreview(
         metadataTitleStyle: userId == authorId
-            ? const ActerChatTheme().sentMessageLinkTitleTextStyle
-            : const ActerChatTheme().receivedMessageLinkTitleTextStyle,
+            ? Theme.of(context).chatTheme.sentMessageLinkTitleTextStyle
+            : Theme.of(context).chatTheme.receivedMessageLinkTitleTextStyle,
         metadataTextStyle: userId == authorId
-            ? const ActerChatTheme().sentMessageLinkDescriptionTextStyle
-            : const ActerChatTheme().receivedMessageLinkDescriptionTextStyle,
+            ? Theme.of(context).chatTheme.sentMessageLinkDescriptionTextStyle
+            : Theme.of(context)
+                .chatTheme
+                .receivedMessageLinkDescriptionTextStyle,
         enableAnimation: true,
         imageBuilder: (image) {
           return Padding(
@@ -93,6 +97,7 @@ class _TextMessageBuilderConsumerState
           isNotice: isNotice,
           isReply: widget.isReply,
           wasEdited: wasEdited,
+          roomId: widget.convo.getRoomIdStr(),
         ),
         width: widget.messageWidth.toDouble(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -107,6 +112,7 @@ class _TextMessageBuilderConsumerState
         isNotice: isNotice,
         isReply: widget.isReply,
         wasEdited: wasEdited,
+        roomId: widget.convo.getRoomIdStr(),
       ),
     );
   }
@@ -124,6 +130,7 @@ class _TextWidget extends ConsumerWidget {
   final bool isNotice;
   final bool isReply;
   final bool wasEdited;
+  final String roomId;
 
   const _TextWidget({
     required this.message,
@@ -132,14 +139,15 @@ class _TextWidget extends ConsumerWidget {
     required this.isNotice,
     required this.isReply,
     required this.wasEdited,
+    required this.roomId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final client = ref.watch(alwaysClientProvider);
     final emojiTextStyle = client.userId().toString() == message.author.id
-        ? const ActerChatTheme().sentEmojiMessageTextStyle
-        : const ActerChatTheme().receivedEmojiMessageTextStyle;
+        ? Theme.of(context).chatTheme.sentEmojiMessageTextStyle
+        : Theme.of(context).chatTheme.receivedEmojiMessageTextStyle;
     return Column(
       children: [
         ConstrainedBox(
@@ -155,6 +163,7 @@ class _TextWidget extends ConsumerWidget {
                 )
               : Html(
                   onLinkTap: (url) => onLinkTap(url, context, ref),
+                  onPillTap: (id) => onPillTap(context, id),
                   backgroundColor: Colors.transparent,
                   data: message.text,
                   shrinkToFit: true,
@@ -174,14 +183,28 @@ class _TextWidget extends ConsumerWidget {
         Visibility(
           visible: wasEdited,
           child: Text(
-            'Edited',
-            style: const ActerChatTheme()
+            L10n.of(context).edited,
+            style: Theme.of(context)
+                .chatTheme
                 .emptyChatPlaceholderTextStyle
                 .copyWith(fontSize: 12),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> onPillTap(BuildContext context, String identifier) async {
+    if (identifier.isEmpty) return;
+    final userId = extractUserIdFromUri(identifier);
+    if (userId != null) {
+      return await showMemberInfoDrawer(
+        context: context,
+        roomId: roomId,
+        memberId: userId,
+        // isShowActions: false,
+      );
+    }
   }
 
   Future<void> onLinkTap(Uri uri, BuildContext context, WidgetRef ref) async {

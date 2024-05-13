@@ -1,4 +1,5 @@
 use derive_getters::Getters;
+use ruma::RoomId;
 use ruma_common::{EventId, OwnedEventId, OwnedUserId, UserId};
 use ruma_events::OriginalMessageLikeEvent;
 use serde::{Deserialize, Serialize};
@@ -122,15 +123,14 @@ impl Rsvp {
 
 impl ActerModel for Rsvp {
     fn indizes(&self, _user_id: &UserId) -> Vec<String> {
-        self.belongs_to()
-            .expect("we always have some as entries")
-            .into_iter()
-            .map(|v| Rsvp::index_for(&v))
-            .collect()
+        vec![Rsvp::index_for(&self.inner.to.event_id.to_string())]
     }
 
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
+    }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
     }
 
     fn capabilities(&self) -> &[Capability] {
@@ -138,35 +138,38 @@ impl ActerModel for Rsvp {
     }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
-        let belongs_to = self.belongs_to().expect("we always have some as entries");
+        let belongs_to = self.inner.to.event_id.to_string();
         trace!(event_id=?self.event_id(), ?belongs_to, "applying rsvp");
 
-        let mut managers = vec![];
-        for m in belongs_to {
-            let model = store.get(&m).await?;
+        let manager = {
+            let model = store.get(&belongs_to).await?;
             if !model.capabilities().contains(&Capability::Commentable) {
                 error!(?model, rsvp = ?self, "doesn't support entries. can't apply");
-                continue;
+                None
+            } else {
+                let mut manager =
+                    RsvpManager::from_store_and_event_id(store, model.event_id()).await;
+                trace!(event_id=?self.event_id(), "adding rsvp entry");
+                if manager.add_rsvp_entry(&self)? {
+                    trace!(event_id=?self.event_id(), "added rsvp entry");
+                    Some(manager)
+                } else {
+                    None
+                }
             }
+        };
 
-            // FIXME: what if we have this twice in the same loop?
-            let mut manager = RsvpManager::from_store_and_event_id(store, model.event_id()).await;
-            trace!(event_id=?self.event_id(), "adding rsvp entry");
-            if manager.add_rsvp_entry(&self)? {
-                trace!(event_id=?self.event_id(), "added rsvp entry");
-                managers.push(manager);
-            }
-        }
         let mut updates = store.save(self.clone().into()).await?;
         trace!(event_id=?self.event_id(), "saved rsvp entry");
-        for manager in managers {
+        if let Some(manager) = manager {
             updates.push(manager.save().await?);
         }
         Ok(updates)
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![self.inner.to.event_id.to_string()])
+        // the higher ups don't need to be bothered by this
+        None
     }
 }
 
@@ -187,6 +190,7 @@ impl From<OriginalMessageLikeEvent<RsvpEventContent>> for Rsvp {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }

@@ -11,7 +11,11 @@ enum Routes {
   start('/start'),
   introProfile('/introProfile'),
   authLogin('/login'),
+  forgotPassword('/forgotPassword'),
   authRegister('/register'),
+  saveUsername('/saveUsername'),
+  linkEmail('/linkEmail'),
+  uploadAvatar('/uploadAvatar'),
 
   // --- profile
   myProfile('/profile'),
@@ -25,6 +29,9 @@ enum Routes {
   // --- Updates
   updates('/updates'),
   actionAddUpdate('/actions/addUpdate'),
+
+  // --- search
+  searchPublicDirectory('/search/public'),
 
   // --- chat
   chat('/chat'),
@@ -41,7 +48,6 @@ enum Routes {
 
   // -- spaces
   spaces('/spaces'),
-  joinSpace('/spaces/join'),
   createSpace('/spaces/create'),
   linkSubspace('/:spaceId([!#][^/]+)/linkSubspace'),
   linkChat('/:spaceId([!#][^/]+)/linkChat'),
@@ -73,7 +79,9 @@ enum Routes {
   // -- settings
   settings('/settings'),
   settingsLabs('/settings/labs'),
+  settingsChat('/settings/chat'),
   settingSessions('/settings/sessions'),
+  settingBackup('/settings/backup'),
   settingLanguage('/settings/language'),
   settingNotifications('/settings/notifications'),
   blockedUsers('/settings/blockedUsers'),

@@ -5,29 +5,15 @@ pub use acter_core::spaces::{
 use acter_core::{
     error::Error,
     events::{
-        attachments::{
-            AttachmentEventContent, AttachmentUpdateEventContent, SyncAttachmentEvent,
-            SyncAttachmentUpdateEvent,
-        },
-        calendar::{
-            CalendarEventEventContent, CalendarEventUpdateEventContent, SyncCalendarEventEvent,
-            SyncCalendarEventUpdateEvent,
-        },
-        comments::{
-            CommentEventContent, CommentUpdateEventContent, SyncCommentEvent,
-            SyncCommentUpdateEvent,
-        },
-        news::{
-            NewsEntryEventContent, NewsEntryUpdateEventContent, SyncNewsEntryEvent,
-            SyncNewsEntryUpdateEvent,
-        },
-        pins::{PinEventContent, PinUpdateEventContent, SyncPinEvent, SyncPinUpdateEvent},
-        rsvp::{RsvpEventContent, SyncRsvpEvent},
+        attachments::{SyncAttachmentEvent, SyncAttachmentUpdateEvent},
+        calendar::{SyncCalendarEventEvent, SyncCalendarEventUpdateEvent},
+        comments::{SyncCommentEvent, SyncCommentUpdateEvent},
+        news::{SyncNewsEntryEvent, SyncNewsEntryUpdateEvent},
+        pins::{SyncPinEvent, SyncPinUpdateEvent},
+        rsvp::SyncRsvpEvent,
         tasks::{
             SyncTaskEvent, SyncTaskListEvent, SyncTaskListUpdateEvent, SyncTaskSelfAssignEvent,
-            SyncTaskSelfUnassignEvent, SyncTaskUpdateEvent, TaskEventContent, TaskListEventContent,
-            TaskListUpdateEventContent, TaskSelfAssignEventContent, TaskSelfUnassignEventContent,
-            TaskUpdateEventContent,
+            SyncTaskSelfUnassignEvent, SyncTaskUpdateEvent,
         },
     },
     executor::Executor,
@@ -45,21 +31,20 @@ use matrix_sdk::{
 use matrix_sdk_ui::timeline::RoomExt;
 use ruma_client_api::state::send_state_event;
 use ruma_common::{
-    directory::RoomTypeFilter, exports, serde::Raw, OwnedRoomAliasId, OwnedRoomId, RoomAliasId,
-    RoomId, RoomOrAliasId, ServerName,
+    directory::RoomTypeFilter, serde::Raw, OwnedRoomAliasId, OwnedRoomId, RoomAliasId, RoomId,
+    RoomOrAliasId, ServerName,
 };
 use ruma_events::{
-    reaction::{ReactionEventContent, SyncReactionEvent},
+    reaction::SyncReactionEvent,
     room::redaction::{RoomRedactionEvent, SyncRoomRedactionEvent},
     space::child::SpaceChildEventContent,
-    AnyStateEventContent, MessageLikeEvent, StateEventType, StaticEventContent,
-    UnsignedRoomRedactionEvent,
+    AnyStateEventContent, MessageLikeEvent, MessageLikeEventType, StateEventType,
 };
 use serde::{Deserialize, Serialize};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::broadcast::Receiver;
 use tokio_stream::{wrappers::BroadcastStream, Stream};
-use tracing::{error, info, trace, warn};
+use tracing::{error, trace, warn};
 
 use crate::{Client, PublicSearchResult, Room, TimelineStream, RUNTIME};
 
@@ -121,8 +106,8 @@ impl Space {
             // generic redaction management
             self.room.add_event_handler(
                 |ev: SyncRoomRedactionEvent,
-                room: SdkRoom,
-                Ctx(executor): Ctx<Executor>| async move {
+                 room: SdkRoom,
+                 Ctx(executor): Ctx<Executor>| async move {
                     let room_id = room.room_id();
 
                     if let RoomRedactionEvent::Original(t) = ev.into_full_event(room_id.to_owned()) {
@@ -139,8 +124,8 @@ impl Space {
 
             self.room.add_event_handler(
                 |ev: SyncTaskListEvent,
-                room: SdkRoom,
-                Ctx(executor): Ctx<Executor>| async move {
+                 room: SdkRoom,
+                 Ctx(executor): Ctx<Executor>| async move {
                     let room_id = room.room_id().to_owned();
                     if let MessageLikeEvent::Original(t) = ev.into_full_event(room_id) {
                         if let Err(error) = executor.handle(AnyActerModel::TaskList(t.into())).await {
@@ -514,9 +499,11 @@ impl Space {
 impl Space {
     #[cfg(feature = "testing")]
     pub async fn timeline_stream(&self) -> TimelineStream {
-        let room = self.inner.room.clone();
+        let room = self.inner.clone();
         let timeline = Arc::new(
-            room.timeline()
+            self.inner
+                .deref()
+                .timeline()
                 .await
                 .expect("Timeline creation doesn't fail"),
         );
@@ -564,10 +551,10 @@ impl Space {
             bail!("Unable to convert a space you didn't join");
         }
         let room = self.inner.room.clone();
+        let my_id = self.client.user_id()?;
+        let client = self.client.deref().clone();
         RUNTIME
             .spawn(async move {
-                let client = room.client();
-                let my_id = client.user_id().context("You must be logged in to do that")?.to_owned();
                 let room_id = room.room_id().to_owned();
                 let member = room
                     .get_member(&my_id)
@@ -621,10 +608,17 @@ impl Space {
             bail!("No permissions to add child to space");
         }
         let room = self.inner.room.clone();
+        let my_id = self.client.user_id()?;
         let client = self.client.clone();
 
         RUNTIME
             .spawn(async move {
+                let permitted = room
+                    .can_user_send_state(&my_id, StateEventType::SpaceChild)
+                    .await?;
+                if !permitted {
+                    bail!("No permissions to change children of this room");
+                }
                 let Some(Ok(homeserver)) = client.homeserver().host_str().map(ServerName::parse)
                 else {
                     return Err(Error::HomeserverMissesHostname)?;
@@ -653,6 +647,7 @@ impl Space {
             bail!("No permissions to remove child from space");
         }
         let room = self.inner.room.clone();
+        let my_id = self.client.user_id()?;
 
         RUNTIME
             .spawn(async move {
@@ -669,6 +664,12 @@ impl Space {
                     }
                     SyncOrStrippedState::Sync(ev) => ev.event_id().to_owned(),
                 };
+                let permitted = room
+                    .can_user_send_message(&my_id, MessageLikeEventType::RoomMessage)
+                    .await?;
+                if !permitted {
+                    bail!("No permissions to send message in this room");
+                }
                 room.redact(&event_id, reason.as_deref(), None).await?;
                 Ok(true)
             })
@@ -740,16 +741,6 @@ impl Client {
         })
     }
 
-    pub async fn public_spaces(
-        &self,
-        search_term: Option<String>,
-        server: Option<String>,
-        since: Option<String>,
-    ) -> Result<PublicSearchResult> {
-        self.search_public(search_term, server, since, Some(RoomTypeFilter::Space))
-            .await
-    }
-
     pub async fn spaces(&self) -> Result<Vec<Space>> {
         Ok(self.spaces.read().await.clone().into_iter().collect())
     }
@@ -773,7 +764,8 @@ impl Client {
         }
     }
 
-    pub async fn space_typed(&self, room_id: &OwnedRoomId) -> Option<Space> {
+    // ***_typed fn accepts rust-typed input, not string-based one
+    async fn space_typed(&self, room_id: &RoomId) -> Option<Space> {
         self.spaces
             .read()
             .await
@@ -782,7 +774,8 @@ impl Client {
             .cloned()
     }
 
-    pub async fn space_by_alias_typed(&self, room_alias: OwnedRoomAliasId) -> Result<Space> {
+    // ***_typed fn accepts rust-typed input, not string-based one
+    async fn space_by_alias_typed(&self, room_alias: OwnedRoomAliasId) -> Result<Space> {
         let space = self
             .spaces
             .read()

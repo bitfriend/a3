@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:acter/common/providers/chat_providers.dart';
 import 'package:acter/common/utils/utils.dart';
 import 'package:acter/features/chat/models/chat_room_state/chat_room_state.dart';
 import 'package:acter/features/chat/providers/chat_providers.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:riverpod/riverpod.dart';
 
 class PostProcessItem {
   final types.Message message;
@@ -29,26 +28,22 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
     required this.ref,
   }) : super(const ChatRoomState()) {
     _init();
-    _fetchMentionRecords();
   }
 
   Future<void> _init() async {
     try {
-      timeline = convo.timelineStream();
+      timeline = ref.read(timelineStreamProvider(convo));
       _listener = timeline.messagesStream(); // keep it resident in memory
-      _poller = _listener.listen((diff) async {
-        await _handleDiff(diff);
-      });
+      _poller = _listener.listen(_handleDiff);
+      ref.onDispose(() => _poller.cancel());
       do {
         await loadMore();
         await Future.delayed(const Duration(milliseconds: 100), () => null);
       } while (state.hasMore && state.messages.length < 10);
-      ref.onDispose(() => _poller.cancel());
     } catch (e) {
+      final err = 'Some error occurred loading room ${e.toString()}';
       state = state.copyWith(
-        loading: ChatRoomLoadingState.error(
-          'Some error occurred loading room ${e.toString()}',
-        ),
+        loading: ChatRoomLoadingState.error(err),
       );
     }
   }
@@ -211,25 +206,6 @@ class ChatRoomNotifier extends StateNotifier<ChatRoomState> {
         if (eventItem != null) {
           await _fetchMediaBinary(eventItem.msgType(), message.id);
         }
-      }
-    }
-  }
-
-  Future<void> _fetchMentionRecords() async {
-    final roomId = convo.getRoomIdStr();
-    final activeMembers = await ref.read(chatMembersProvider(roomId).future);
-    List<Map<String, String>> mentionRecords = [];
-    final mentionListNotifier = ref.read(chatInputProvider(roomId).notifier);
-    for (int i = 0; i < activeMembers.length; i++) {
-      String userId = activeMembers[i].userId().toString();
-      final profile = activeMembers[i].getProfile();
-      Map<String, String> record = {};
-      final userName = (profile.getDisplayName());
-      record['display'] = userName ?? simplifyUserId(userId)!;
-      record['link'] = userId;
-      mentionRecords.add(record);
-      if (i % 3 == 0 || i == activeMembers.length - 1) {
-        mentionListNotifier.setMentions(mentionRecords);
       }
     }
   }

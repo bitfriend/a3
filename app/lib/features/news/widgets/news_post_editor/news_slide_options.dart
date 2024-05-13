@@ -1,4 +1,5 @@
 import 'package:acter/common/providers/keyboard_visbility_provider.dart';
+import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/widgets/room/room_avatar_builder.dart';
 import 'package:acter/features/news/model/keys.dart';
 import 'package:acter/features/news/model/news_slide_model.dart';
@@ -11,6 +12,7 @@ import 'package:cross_file_image/cross_file_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class NewsSlideOptions extends ConsumerStatefulWidget {
   const NewsSlideOptions({super.key});
@@ -75,11 +77,15 @@ class _NewsSlideOptionsState extends ConsumerState<NewsSlideOptions> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.background,
                           borderRadius: BorderRadius.circular(5),
-                          border:
-                              ref.watch(newsStateProvider).currentNewsSlide ==
-                                      slidePost
-                                  ? Border.all(color: Colors.white)
-                                  : null,
+                          border: ref
+                                      .watch(newsStateProvider)
+                                      .currentNewsSlide ==
+                                  slidePost
+                              ? Border.all(
+                                  color:
+                                      Theme.of(context).colorScheme.textColor,
+                                )
+                              : null,
                         ),
                         child: getIconAsPerSlideType(
                           slidePost.type,
@@ -164,7 +170,7 @@ class _NewsSlideOptionsState extends ConsumerState<NewsSlideOptions> {
                     .read(newsStateProvider.notifier)
                     .changeNewsPostSpaceId(context);
               },
-              child: const Text('Select Space'),
+              child: Text(L10n.of(context).selectSpace),
             ),
     );
   }

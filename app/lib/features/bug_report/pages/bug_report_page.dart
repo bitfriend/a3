@@ -1,19 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:acter/common/providers/common_providers.dart';
 import 'package:acter/common/utils/utils.dart';
 import 'package:acter/features/bug_report/const.dart';
+import 'package:acter_flutter_sdk/acter_flutter_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
-import 'package:acter_flutter_sdk/acter_flutter_sdk.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:path/path.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart';
 
 final _log = Logger('a3::bug_report');
 
@@ -131,18 +132,19 @@ class _BugReportState extends ConsumerState<BugReportPage> {
       );
       String? issueId = getIssueId(reportUrl);
       loadingNotifier.update((state) => false);
-      EasyLoading.showToast(
-        issueId != null
-            ? 'Reported the bug successfully! (#$issueId)'
-            : 'Thanks for reporting that bug!',
-        toastPosition: EasyLoadingToastPosition.bottom,
-      );
+      if (context.mounted) {
+        final status = issueId != null
+            ? L10n.of(context).reportedBugSuccessful(issueId)
+            : L10n.of(context).thanksForReport;
+        EasyLoading.showToast(status);
+      }
       return true;
     } catch (e) {
       loadingNotifier.update((state) => false);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bug reporting error: $e')),
+        EasyLoading.showError(
+          L10n.of(context).bugReportingError(e),
+          duration: const Duration(seconds: 3),
         );
       }
       return false;
@@ -157,7 +159,7 @@ class _BugReportState extends ConsumerState<BugReportPage> {
       child: Form(
         key: formKey,
         child: Scaffold(
-          appBar: AppBar(title: const Text('Report a problem')),
+          appBar: AppBar(title: Text(L10n.of(context).bugReportTitle)),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -165,20 +167,19 @@ class _BugReportState extends ConsumerState<BugReportPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
-                const Text('Brief description of the issue'),
+                Text(L10n.of(context).bugReportDescription),
                 const SizedBox(height: 10),
                 TextFormField(
                   key: BugReportPage.titleField,
-                  style: const TextStyle(color: Colors.white),
                   controller: titleController,
                   validator: (newValue) => newValue == null || newValue.isEmpty
-                      ? ' Please enter a description'
+                      ? L10n.of(context).emptyDescription
                       : null,
                 ),
                 const SizedBox(height: 10),
                 CheckboxListTile(
                   key: BugReportPage.includeUserId,
-                  title: const Text('Include my Matrix ID'),
+                  title: Text(L10n.of(context).includeUserId),
                   value: withUserId,
                   onChanged: (bool? value) => setState(() {
                     withUserId = value ?? true;
@@ -187,7 +188,7 @@ class _BugReportState extends ConsumerState<BugReportPage> {
                 ),
                 CheckboxListTile(
                   key: BugReportPage.includeLog,
-                  title: const Text('Include current logs'),
+                  title: Text(L10n.of(context).includeLog),
                   value: withLogFile,
                   onChanged: (bool? value) => setState(() {
                     withLogFile = value ?? true;
@@ -196,7 +197,7 @@ class _BugReportState extends ConsumerState<BugReportPage> {
                 ),
                 CheckboxListTile(
                   key: BugReportPage.includePrevLog,
-                  title: const Text('Include logs from previous run'),
+                  title: Text(L10n.of(context).includePrevLog),
                   value: withPrevLogFile,
                   onChanged: (bool? value) => setState(() {
                     withPrevLogFile = value ?? true;
@@ -206,7 +207,7 @@ class _BugReportState extends ConsumerState<BugReportPage> {
                 const SizedBox(height: 10),
                 CheckboxListTile(
                   key: BugReportPage.includeScreenshot,
-                  title: const Text('Include screenshot'),
+                  title: Text(L10n.of(context).includeScreenshot),
                   value: withScreenshot,
                   onChanged: (bool? value) => setState(() {
                     withScreenshot = value ?? true;
@@ -225,7 +226,7 @@ class _BugReportState extends ConsumerState<BugReportPage> {
                       Object error,
                       StackTrace? stackTrace,
                     ) {
-                      return Text('Could not load image due to $error');
+                      return Text(L10n.of(context).couldNotLoadImage(error));
                     },
                   ),
                 if (withScreenshot) const SizedBox(height: 10),
@@ -233,18 +234,17 @@ class _BugReportState extends ConsumerState<BugReportPage> {
                 const SizedBox(height: 10),
                 isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
+                    : ActerPrimaryActionButton(
                         key: BugReportPage.submitBtn,
                         onPressed: () async {
-                          if (formKey.currentState!.validate()) {
-                            if (await reportBug(context)) {
-                              if (context.mounted && context.canPop()) {
-                                context.pop();
-                              }
-                            }
+                          if (!formKey.currentState!.validate()) return;
+                          if (!await reportBug(context)) return;
+                          if (!context.mounted) return;
+                          if (context.canPop()) {
+                            context.pop();
                           }
                         },
-                        child: const Text('Submit'),
+                        child: Text(L10n.of(context).submit),
                       ),
               ],
             ),

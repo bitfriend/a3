@@ -1,10 +1,10 @@
-import 'package:acter/common/dialogs/member_info_drawer.dart';
-import 'package:acter/common/providers/chat_providers.dart';
+import 'package:acter/features/member/dialogs/show_member_info_drawer.dart';
+import 'package:acter/common/providers/room_providers.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:logging/logging.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 final _log = Logger('a3::chat::avatar_builder');
 
@@ -20,25 +20,19 @@ class AvatarBuilder extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final memberProfile = ref
-        .watch(memberProfileByInfoProvider((userId: userId, roomId: roomId)));
+    final memberProfile =
+        ref.watch(roomMemberProvider((userId: userId, roomId: roomId)));
     return memberProfile.when(
-      data: (profile) {
+      data: (data) {
+        final profile = data.profile;
         return Padding(
           padding: const EdgeInsets.only(right: 10),
           child: ActerAvatar(
             onAvatarTap: () async {
-              final member = await ref.read(
-                memberProvider(
-                  (userId: userId, roomId: roomId),
-                ).future,
-              );
               // ignore: use_build_context_synchronously
               showMemberInfoDrawer(
                 context: context,
-                memberProfile: profile,
                 roomId: roomId,
-                member: member!,
                 memberId: userId,
               );
             },

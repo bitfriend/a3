@@ -5,8 +5,9 @@ import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:logging/logging.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 final _log = Logger('a3::chat::room_avatar');
 
@@ -29,9 +30,9 @@ class RoomAvatar extends ConsumerWidget {
       width: avatarSize,
       height: avatarSize,
       child: ref.watch(chatProvider(roomId)).when(
-            data: (convo) => chatAvatarUI(convo, ref),
-            error: (e, s) => Center(child: Text('Loading room failed: $e')),
-            loading: () => const Center(child: Text('loading...')),
+            data: (convo) => chatAvatarUI(convo, ref, context),
+            error: (e, s) => Center(child: Text(L10n.of(context).loadingRoomFailed(e))),
+            loading: () => Center(child: Text(L10n.of(context).loading)),
           ),
     );
   }
@@ -62,7 +63,7 @@ class RoomAvatar extends ConsumerWidget {
     );
   }
 
-  Widget chatAvatarUI(Convo convo, WidgetRef ref) {
+  Widget chatAvatarUI(Convo convo, WidgetRef ref, BuildContext context) {
     //Data Providers
     final convoProfile = ref.watch(chatProfileDataProvider(convo));
 
@@ -97,7 +98,7 @@ class RoomAvatar extends ConsumerWidget {
 
         //Type == DM and no avatar: Handle avatar according to the members counts
         else {
-          return dmAvatar(ref);
+          return dmAvatar(ref, context);
         }
       },
       skipLoadingOnReload: false,
@@ -122,9 +123,9 @@ class RoomAvatar extends ConsumerWidget {
     );
   }
 
-  Widget dmAvatar(WidgetRef ref) {
+  Widget dmAvatar(WidgetRef ref, BuildContext context) {
     final client = ref.watch(alwaysClientProvider);
-    final convoMembers = ref.watch(chatMembersProvider(roomId));
+    final convoMembers = ref.watch(membersIdsProvider(roomId));
     return convoMembers.when(
       data: (members) {
         int count = members.length;
@@ -134,7 +135,7 @@ class RoomAvatar extends ConsumerWidget {
           return memberAvatar(members[0], ref);
         } else if (count == 2) {
           //Show opponent member avatar
-          if (members[0].userId().toString() != client.userId().toString()) {
+          if (members[0] != client.userId().toString()) {
             return memberAvatar(members[0], ref);
           } else {
             return memberAvatar(members[1], ref);
@@ -147,21 +148,21 @@ class RoomAvatar extends ConsumerWidget {
         }
       },
       skipLoadingOnReload: false,
-      error: (error, stackTrace) => Text('Error loading members count $error'),
+      error: (error, stackTrace) => Text(L10n.of(context).loadingMembersCountFailed(error)),
       loading: () => const CircularProgressIndicator(),
     );
   }
 
-  Widget memberAvatar(Member member, WidgetRef ref) {
-    final memberProfile = ref.watch(memberProfileProvider(member));
-    final userId = member.userId().toString();
+  Widget memberAvatar(String userId, WidgetRef ref) {
+    final memberProfile =
+        ref.watch(roomMemberProvider((userId: userId, roomId: roomId)));
     return memberProfile.when(
       data: (data) => ActerAvatar(
         mode: DisplayMode.DM,
         avatarInfo: AvatarInfo(
           uniqueId: userId,
-          displayName: data.displayName,
-          avatar: data.getAvatarImage(),
+          displayName: data.profile.displayName,
+          avatar: data.profile.getAvatarImage(),
         ),
         size: avatarSize,
       ),
@@ -185,30 +186,32 @@ class RoomAvatar extends ConsumerWidget {
     );
   }
 
-  Widget groupAvatarDM(List<Member> members, WidgetRef ref) {
-    final userId = members[0].userId().toString();
-    final secondaryUserId = members[1].userId().toString();
-    final profile = ref.watch(memberProfileProvider(members[0]));
-    final secondaryProfile = ref.watch(memberProfileProvider(members[1]));
+  Widget groupAvatarDM(List<String> members, WidgetRef ref) {
+    final userId = members[0];
+    final secondaryUserId = members[1];
+    final profile =
+        ref.watch(roomMemberProvider((userId: members[0], roomId: roomId)));
+    final secondaryProfile =
+        ref.watch(roomMemberProvider((userId: members[1], roomId: roomId)));
 
     return profile.when(
       data: (data) {
         return ActerAvatar(
           avatarInfo: AvatarInfo(
             uniqueId: userId,
-            displayName: data.displayName,
-            avatar: data.getAvatarImage(),
+            displayName: data.profile.displayName,
+            avatar: data.profile.getAvatarImage(),
           ),
           avatarsInfo: secondaryProfile.maybeWhen(
             data: (secData) => [
               AvatarInfo(
                 uniqueId: secondaryUserId,
-                displayName: secData.displayName,
-                avatar: secData.getAvatarImage(),
+                displayName: secData.profile.displayName,
+                avatar: secData.profile.getAvatarImage(),
               ),
               for (int i = 2; i < members.length; i++)
                 AvatarInfo(
-                  uniqueId: members[i].userId().toString(),
+                  uniqueId: members[i],
                 ),
             ],
             orElse: () => [],
@@ -235,12 +238,12 @@ class RoomAvatar extends ConsumerWidget {
             data: (secData) => [
               AvatarInfo(
                 uniqueId: secondaryUserId,
-                displayName: secData.displayName,
-                avatar: secData.getAvatarImage(),
+                displayName: secData.profile.displayName,
+                avatar: secData.profile.getAvatarImage(),
               ),
               for (int i = 2; i < members.length; i++)
                 AvatarInfo(
-                  uniqueId: members[i].userId().toString(),
+                  uniqueId: members[i],
                 ),
             ],
             orElse: () => [],

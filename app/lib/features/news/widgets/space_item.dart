@@ -3,6 +3,7 @@ import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart' show Member;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class SpaceItem extends ConsumerWidget {
   final String? title;
@@ -55,20 +56,14 @@ class SpaceItem extends ConsumerWidget {
                         children: [
                           TextSpan(
                             text: '${members.length}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const WidgetSpan(
                             child: SizedBox(width: 4),
                           ),
-                          const TextSpan(
-                            text: 'Members',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
+                          TextSpan(
+                            text: L10n.of(context).members,
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       ),

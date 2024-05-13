@@ -1,16 +1,17 @@
 import 'package:acter/common/providers/room_providers.dart';
-import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
+
 import 'package:acter/common/utils/routes.dart';
-import 'package:acter/common/widgets/default_dialog.dart';
-import 'package:atlas_icons/atlas_icons.dart';
+import 'package:acter/features/space/dialogs/leave_space.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class SpaceToolbar extends ConsumerWidget {
   static const optionsMenu = Key('space-options-menu');
   static const settingsMenu = Key('space-options-settings');
+  static const leaveMenu = Key('space-options-leave');
   final String spaceId;
 
   const SpaceToolbar({super.key, required this.spaceId});
@@ -27,7 +28,7 @@ class SpaceToolbar extends ConsumerWidget {
             pathParameters: {'spaceId': spaceId},
             queryParameters: {'spaceId': spaceId},
           ),
-          child: const Text('Edit Details'),
+          child: Text(L10n.of(context).editDetails),
         ),
       );
     }
@@ -39,86 +40,35 @@ class SpaceToolbar extends ConsumerWidget {
           Routes.spaceSettings.name,
           pathParameters: {'spaceId': spaceId},
         ),
-        child: const Text('Settings'),
+        child: Text(L10n.of(context).settings),
       ),
       const PopupMenuDivider(),
       PopupMenuItem(
-        onTap: () => _handleLeaveSpace(context, ref),
-        child: const Text('Leave Space'),
+        key: leaveMenu,
+        onTap: () => showLeaveSpaceDialog(context, ref, spaceId),
+        child: Text(
+          L10n.of(context).leaveSpace,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.error,
+          ),
+        ),
       ),
     ]);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () => context.canPop()
-                ? context.pop()
-                : context.goNamed(Routes.dashboard.name),
-            child: Icon(
-              Atlas.arrow_left,
-              color: Theme.of(context).colorScheme.neutral5,
-            ),
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      actions: [
+        PopupMenuButton(
+          icon: Icon(
+            key: optionsMenu,
+            Icons.more_vert,
+            color: Theme.of(context).colorScheme.neutral5,
           ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(top: 18),
-            child: PopupMenuButton(
-              icon: Icon(
-                key: optionsMenu,
-                Icons.more_vert,
-                color: Theme.of(context).colorScheme.neutral5,
-              ),
-              iconSize: 28,
-              color: Theme.of(context).colorScheme.surface,
-              itemBuilder: (BuildContext context) => submenu,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleLeaveSpace(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
-    showAdaptiveDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => DefaultDialog(
-        title: Column(
-          children: <Widget>[
-            const Icon(Icons.person_remove_outlined),
-            const SizedBox(height: 5),
-            Text('Leave Space', style: Theme.of(context).textTheme.titleMedium),
-          ],
+          iconSize: 28,
+          color: Theme.of(context).colorScheme.surface,
+          itemBuilder: (BuildContext context) => submenu,
         ),
-        subtitle: const Text(
-          'Are you sure you want to leave this space?',
-        ),
-        actions: <Widget>[
-          ElevatedButton(
-            onPressed: () => context.pop(),
-            child: const Text('No, I stay'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final space = await ref.read(spaceProvider(spaceId).future);
-              await space.leave();
-              // refresh spaces list
-              ref.invalidate(spacesProvider);
-              if (!context.mounted) {
-                return;
-              }
-              context.pop();
-              context.goNamed(Routes.dashboard.name);
-            },
-            child: const Text('Yes, Leave'),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

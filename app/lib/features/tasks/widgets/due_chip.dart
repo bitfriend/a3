@@ -1,9 +1,10 @@
 import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/features/tasks/widgets/due_picker.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
+import 'package:dart_date/dart_date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:dart_date/dart_date.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:intl/intl.dart';
 
 class DueChip extends StatefulWidget {
@@ -65,22 +66,23 @@ class _DueChipState extends State<DueChip> {
     TextStyle? dueTheme;
 
     if (dueDate!.isToday) {
-      label = 'Due today';
+      label = L10n.of(context).dueToday;
     } else if (dueDate!.isTomorrow) {
-      label = 'Due tomorrow';
+      label = L10n.of(context).dueTomorrow;
     } else if (dueDate!.isPast) {
       label = dueDate!.timeago();
       dueTheme = textStyle.copyWith(
         color: Theme.of(context).colorScheme.taskOverdueFG,
       );
     }
+    final dateText =
+        DateFormat(DateFormat.YEAR_MONTH_WEEKDAY_DAY).format(dueDate!);
 
     return Chip(
       visualDensity: widget.visualDensity,
       label: Text(
         // FIXME: tooltip to show the full date?
-        label ??
-            'Due: ${DateFormat(DateFormat.YEAR_MONTH_WEEKDAY_DAY).format(dueDate!)}',
+        label ?? L10n.of(context).due(dateText),
         style: widget.task.isDone() ? null : dueTheme,
       ),
     );
@@ -91,10 +93,9 @@ class _DueChipState extends State<DueChip> {
       context: context,
       initialDate: dueDate,
     ); // FIXME: add unsetting support
-    if (newDue == null) {
-      return;
-    }
-    EasyLoading.show(status: 'Updating due');
+    if (!context.mounted) return;
+    if (newDue == null) return;
+    EasyLoading.show(status: L10n.of(context).updatingDue);
     try {
       final updater = widget.task.updateBuilder();
       updater.dueDate(newDue.due.year, newDue.due.month, newDue.due.day);
@@ -109,12 +110,20 @@ class _DueChipState extends State<DueChip> {
         updater.unsetUtcDueTimeOfDay();
       }
       await updater.send();
-      EasyLoading.showToast(
-        'Due successfully changed',
-        toastPosition: EasyLoadingToastPosition.bottom,
-      );
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showToast(L10n.of(context).dueSuccess);
     } catch (e) {
-      EasyLoading.showError('Updating due failed: $e');
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).updatingDueFailed(e),
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 }

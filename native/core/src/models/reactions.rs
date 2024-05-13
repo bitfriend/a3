@@ -1,4 +1,5 @@
 use derive_getters::Getters;
+use ruma::RoomId;
 use ruma_common::{EventId, OwnedEventId, OwnedUserId, UserId};
 use ruma_events::{reaction::ReactionEventContent, relation::Annotation, OriginalMessageLikeEvent};
 use serde::{Deserialize, Serialize};
@@ -6,7 +7,11 @@ use std::{collections::HashMap, ops::Deref};
 use tracing::{error, info, trace};
 
 use super::{ActerModel, AnyActerModel, Capability, EventMeta, RedactedActerModel};
-use crate::{store::Store, Result};
+use crate::{
+    store::Store,
+    util::{is_false, is_zero},
+    Result,
+};
 
 // We understand all unicode [Red Heart](https://emojipedia.org/red-heart#technical) as quick-likes
 static LIKE_HEART: &str = "\u{2764}\u{FE0F}";
@@ -31,17 +36,6 @@ pub struct ReactionStats {
     pub total_reaction_count: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub user_reactions: Vec<OwnedEventId>,
-}
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_zero(num: &u32) -> bool {
-    *num == 0
-}
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_false(val: &bool) -> bool {
-    !(*val)
 }
 
 #[derive(Clone, Debug)]
@@ -230,34 +224,36 @@ impl Reaction {
         store: &Store,
         redaction_model: Option<RedactedActerModel>,
     ) -> Result<Vec<String>> {
-        let belongs_to = self.belongs_to().unwrap();
+        let belongs_to = self.inner.relates_to.event_id.to_string();
         trace!(event_id=?self.event_id(), ?belongs_to, "applying reaction");
 
-        let mut managers = vec![];
-        for m in belongs_to {
-            let model = store.get(&m).await?;
+        let manager = {
+            let model = store.get(&belongs_to).await?;
             if !model.capabilities().contains(&Capability::Reactable) {
                 error!(?model, reaction = ?self, "doesn't support entries. can't apply");
-                continue;
-            }
-
-            // FIXME: what if we have this twice in the same loop?
-            let mut manager =
-                ReactionManager::from_store_and_event_id(store, model.event_id()).await;
-            trace!(event_id=?self.event_id(), "adding reaction entry");
-            if let Some(redacted) = redaction_model.as_ref() {
-                if manager.redact_reaction_entry(self, redacted)? {
-                    trace!(event_id=?self.event_id(), "redacted reaction entry");
-                    managers.push(manager);
+                None
+            } else {
+                let mut manager =
+                    ReactionManager::from_store_and_event_id(store, model.event_id()).await;
+                trace!(event_id=?self.event_id(), "adding reaction entry");
+                if let Some(redacted) = redaction_model.as_ref() {
+                    if manager.redact_reaction_entry(self, redacted)? {
+                        trace!(event_id=?self.event_id(), "redacted reaction entry");
+                        Some(manager)
+                    } else {
+                        None
+                    }
+                } else if manager.add_reaction_entry(self)? {
+                    trace!(event_id=?self.event_id(), "added reaction entry");
+                    Some(manager)
+                } else {
+                    None
                 }
-            } else if manager.add_reaction_entry(self)? {
-                trace!(event_id=?self.event_id(), "added reaction entry");
-                managers.push(manager);
             }
-        }
+        };
         let mut updates = store.save(self.clone().into()).await?;
         trace!(event_id=?self.event_id(), "saved reaction entry");
-        for manager in managers {
+        if let Some(manager) = manager {
             updates.push(manager.save().await?);
         }
         Ok(updates)
@@ -266,15 +262,14 @@ impl Reaction {
 
 impl ActerModel for Reaction {
     fn indizes(&self, _user_id: &UserId) -> Vec<String> {
-        self.belongs_to()
-            .expect("we always have some as entries")
-            .into_iter()
-            .map(|v| Reaction::index_for(&v))
-            .collect()
+        vec![Reaction::index_for(&self.inner.relates_to.event_id)]
     }
 
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
+    }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
     }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
@@ -282,7 +277,8 @@ impl ActerModel for Reaction {
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![self.inner.relates_to.event_id.to_string()])
+        // Do not trigger the parent to update, we have a manager
+        None
     }
 
     // custom redaction code
@@ -312,6 +308,7 @@ impl From<OriginalMessageLikeEvent<ReactionEventContent>> for Reaction {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }

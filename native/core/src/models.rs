@@ -22,6 +22,7 @@ pub use news::{NewsEntry, NewsEntryUpdate};
 pub use pins::{Pin, PinUpdate};
 pub use reactions::{Reaction, ReactionManager, ReactionStats};
 pub use rsvp::{Rsvp, RsvpManager, RsvpStats};
+use ruma::RoomId;
 use ruma_common::{
     serde::Raw, EventId, MilliSecondsSinceUnixEpoch, OwnedEventId, OwnedRoomId, OwnedUserId, UserId,
 };
@@ -115,6 +116,10 @@ pub trait ActerModel: Debug {
     fn indizes(&self, user_id: &UserId) -> Vec<String>;
     /// The key to store this model under
     fn event_id(&self) -> &EventId;
+
+    /// The room id this model belongs to
+    fn room_id(&self) -> &RoomId;
+
     /// The models to inform about this model as it belongs to that
     fn belongs_to(&self) -> Option<Vec<String>> {
         None
@@ -231,6 +236,9 @@ impl RedactedActerModel {
 }
 
 impl ActerModel for RedactedActerModel {
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
     fn indizes(&self, _user_id: &UserId) -> Vec<String> {
         self.indizes.clone()
     }
@@ -257,6 +265,10 @@ pub struct EventMeta {
 
     /// The ID of the room of this event
     pub room_id: OwnedRoomId,
+
+    /// Optional redacted event identifier
+    #[serde(default)]
+    redacted: Option<OwnedEventId>,
 }
 
 impl EventMeta {
@@ -268,6 +280,7 @@ impl EventMeta {
             sender: value.sender.clone(),
             room_id: value.room_id.clone(),
             origin_server_ts: value.origin_server_ts,
+            redacted: None,
         })
     }
 }
@@ -353,6 +366,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -366,6 +380,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -379,6 +394,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -392,6 +408,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -405,6 +422,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -418,6 +436,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -431,6 +450,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -444,6 +464,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -457,6 +478,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -470,6 +492,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -483,6 +506,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -496,6 +520,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -509,6 +534,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -522,6 +548,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -535,6 +562,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -548,6 +576,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -561,6 +590,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -575,6 +605,7 @@ impl TryFrom<AnyActerEvent> for AnyActerModel {
                         event_id: r.event_id,
                         sender: r.sender,
                         origin_server_ts: r.origin_server_ts,
+                        redacted: None,
                     },
                     reason: r.unsigned.redacted_because,
                 }),
@@ -630,7 +661,6 @@ mod tests {
     use super::*;
     use crate::Result;
     use ruma_common::owned_event_id;
-    use serde_json;
     #[test]
     fn ensure_minimal_tasklist_parses() -> Result<()> {
         let json_raw = r#"{"type":"global.acter.dev.tasklist",

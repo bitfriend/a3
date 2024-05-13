@@ -7,15 +7,18 @@ import 'package:logging/logging.dart';
 
 final _log = Logger('a3::common::room');
 
-// ignore_for_file: unused_field
-
 class AsyncMaybeRoomNotifier extends FamilyAsyncNotifier<Room?, String> {
   late Stream<bool> _listener;
   late StreamSubscription<bool> _poller;
 
   Future<Room?> _getRoom() async {
     final client = ref.read(alwaysClientProvider);
-    return await client.room(arg);
+    try {
+      return await client.room(arg);
+    } catch (e, stack) {
+      _log.severe('room not found', e, stack);
+      return null;
+    }
   }
 
   @override

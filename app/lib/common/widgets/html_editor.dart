@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/utils/constants.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:flutter/material.dart';
@@ -112,7 +114,6 @@ class HtmlEditorState extends State<HtmlEditor> {
   late EditorScrollController editorScrollController;
   final TextDirection _textDirection = TextDirection.ltr;
   // we store this to the stream stays alive
-  // ignore: unused_field
   StreamSubscription<(TransactionTime, Transaction)>? _changeListener;
 
   @override
@@ -197,7 +198,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     );
     if (widget.onSave != null) {
       children.add(
-        ElevatedButton(
+        ActerPrimaryActionButton(
           key: HtmlEditor.saveEditKey,
           onPressed: () => _triggerExport(widget.onSave!),
           child: const Text('Save'),

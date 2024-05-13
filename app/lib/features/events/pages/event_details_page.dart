@@ -5,11 +5,15 @@ import 'package:acter/common/utils/utils.dart';
 import 'package:acter/common/widgets/redact_content.dart';
 import 'package:acter/common/widgets/render_html.dart';
 import 'package:acter/common/widgets/report_content.dart';
+import 'package:acter/features/attachments/widgets/attachment_section.dart';
+import 'package:acter/features/comments/widgets/comments_section.dart';
 import 'package:acter/features/events/model/keys.dart';
 import 'package:acter/features/events/providers/event_providers.dart';
+import 'package:acter/features/events/widgets/participants_list.dart';
 import 'package:acter/features/events/widgets/skeletons/event_details_skeleton_widget.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:acter/features/home/widgets/space_chip.dart';
+import 'package:acter/features/space/widgets/member_avatar.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
@@ -20,6 +24,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:logging/logging.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
+import 'package:path/path.dart' show join;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 final _log = Logger('a3::event::details');
 
@@ -53,7 +61,8 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
             ],
           );
         },
-        error: (error, stackTrace) => Text('Error loading event due to $error'),
+        error: (error, stackTrace) =>
+            Text(L10n.of(context).errorLoadingEventDueTo(error)),
         loading: () => const EventDetailsSkeleton(),
       ),
     );
@@ -71,7 +80,10 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
     return SliverAppBar(
       expandedHeight: 200.0,
       pinned: true,
-      actions: [_buildActionMenu(calendarEvent)],
+      actions: [
+        _buildShareAction(calendarEvent),
+        _buildActionMenu(calendarEvent),
+      ],
       flexibleSpace: Container(
         padding: const EdgeInsets.only(top: 20),
         decoration: const BoxDecoration(gradient: primaryGradient),
@@ -102,11 +114,11 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
               Routes.editCalendarEvent.name,
               pathParameters: {'calendarId': widget.calendarId},
             ),
-            child: const Row(
+            child: Row(
               children: <Widget>[
-                Icon(Atlas.pencil_edit_thin),
-                SizedBox(width: 10),
-                Text('Edit Event'),
+                const Icon(Atlas.pencil_edit_thin),
+                const SizedBox(width: 10),
+                Text(L10n.of(context).eventEdit),
               ],
             ),
           ),
@@ -124,7 +136,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
               context: context,
               builder: (context) => RedactContentWidget(
                 removeBtnKey: EventsKeys.eventRemoveBtn,
-                title: 'Remove this post',
+                title: L10n.of(context).removeThisPost,
                 eventId: event.eventId().toString(),
                 onSuccess: () {
                   ref.invalidate(calendarEventProvider);
@@ -147,7 +159,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 const SizedBox(width: 10),
-                const Text('Remove Event'),
+                Text(L10n.of(context).eventRemove),
               ],
             ),
           ),
@@ -161,9 +173,8 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
         onTap: () => showAdaptiveDialog(
           context: context,
           builder: (ctx) => ReportContentWidget(
-            title: 'Report this Event',
-            description:
-                'Report this content to your homeserver administrator. Please note that your administrator won\'t be able to read or view files in encrypted spaces.',
+            title: L10n.of(context).reportThisEvent,
+            description: L10n.of(context).reportThisContent,
             eventId: widget.calendarId,
             roomId: event.roomIdStr(),
             senderId: event.sender().toString(),
@@ -177,7 +188,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
               color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(width: 10),
-            const Text('Report Event'),
+            Text(L10n.of(context).eventReport),
           ],
         ),
       ),
@@ -203,6 +214,10 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
           _buildEventDataSet(calendarEvent),
           const SizedBox(height: 10),
           _buildEventDescription(calendarEvent),
+          const SizedBox(height: 40),
+          AttachmentSectionWidget(manager: calendarEvent.attachments()),
+          const SizedBox(height: 40),
+          CommentsSection(manager: calendarEvent.comments()),
           const SizedBox(height: 40),
         ],
       ),
@@ -248,7 +263,8 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
                       valueListenable: eventParticipantsList,
                       builder: (context, eventParticipantsList, child) {
                         return Text(
-                          '${eventParticipantsList.length} People going',
+                          L10n.of(context)
+                              .peopleGoing(eventParticipantsList.length),
                         );
                       },
                     ),
@@ -263,8 +279,8 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
   }
 
   Future<void> onRsvp(RsvpStatusTag status, WidgetRef ref) async {
+    EasyLoading.show(status: L10n.of(context).updatingRSVP);
     try {
-      EasyLoading.show(status: 'Updating RSVP', dismissOnTap: false);
       final event =
           await ref.read(calendarEventProvider(widget.calendarId).future);
       final rsvpManager = await event.rsvps();
@@ -285,12 +301,16 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
       // refresh cache
       final client = ref.read(alwaysClientProvider);
       await client.waitForRsvp(rsvpId.toString(), null);
+      EasyLoading.dismiss();
       // refresh UI of this page & outer page
       ref.invalidate(myRsvpStatusProvider(widget.calendarId));
     } catch (e, s) {
       _log.severe('Error =>', e, s);
-    } finally {
-      EasyLoading.dismiss();
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(e.toString(), duration: const Duration(seconds: 3));
     }
   }
 
@@ -326,7 +346,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
             key: EventsKeys.eventRsvpGoingBtn,
             onTap: () => onRsvp(RsvpStatusTag.Yes, ref),
             iconData: Icons.check,
-            actionName: 'Going',
+            actionName: L10n.of(context).going,
             isSelected: rsvp.single == RsvpStatusTag.Yes,
           ),
           _buildVerticalDivider(),
@@ -334,7 +354,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
             key: EventsKeys.eventRsvpNotGoingBtn,
             onTap: () => onRsvp(RsvpStatusTag.No, ref),
             iconData: Icons.close,
-            actionName: 'Not Going',
+            actionName: L10n.of(context).notGoing,
             isSelected: rsvp.single == RsvpStatusTag.No,
           ),
           _buildVerticalDivider(),
@@ -342,12 +362,50 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
             key: EventsKeys.eventRsvpMaybeBtn,
             onTap: () => onRsvp(RsvpStatusTag.Maybe, ref),
             iconData: Icons.question_mark,
-            actionName: 'Maybe',
+            actionName: L10n.of(context).maybe,
             isSelected: rsvp.single == RsvpStatusTag.Maybe,
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildShareAction(CalendarEvent calendarEvent) {
+    return PopupMenuButton(
+      icon: const Icon(Icons.share),
+      itemBuilder: (ctx) => [
+        PopupMenuItem(
+          onTap: () => onShareEvent(calendarEvent),
+          child: Row(
+            children: <Widget>[
+              const Icon(Icons.share),
+              const SizedBox(width: 10),
+              Text(L10n.of(context).shareIcal),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> onShareEvent(CalendarEvent event) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final filename = event.title().replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+      final icalPath = join(tempDir.path, '$filename.ics');
+      event.icalForSharing(icalPath);
+
+      await Share.shareXFiles([
+        XFile(
+          icalPath,
+          mimeType: 'text/calendar',
+        ),
+      ]);
+    } catch (error, stack) {
+      _log.severe('Creating iCal Share Event failed:', error, stack);
+      // ignore: use_build_context_synchronously
+      EasyLoading.showError(L10n.of(context).shareFailed(error));
+    }
   }
 
   Widget _buildEventRsvpActionItem({
@@ -425,35 +483,61 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
       valueListenable: eventParticipantsList,
       builder: (context, eventParticipantsList, child) {
         if (eventParticipantsList.isEmpty) {
-          return const Text('No participants going');
+          return Text(L10n.of(context).noParticipantsGoing);
         }
 
-        List<Widget> avtarList = [];
-        for (final participantId in eventParticipantsList) {
-          final memberInfo = ref.watch(
-            roomMemberProvider((roomId: roomId, userId: participantId)),
-          );
-          var participant = memberInfo.when(
-            data: (profileData) {
-              return ActerAvatar(
-                mode: DisplayMode.DM,
-                avatarInfo: AvatarInfo(
-                  uniqueId: roomId,
-                  displayName: profileData.displayName ?? roomId,
-                  avatar: profileData.getAvatarImage(),
+        final membersCount = eventParticipantsList.length;
+        List<String> firstFiveEventParticipantsList = eventParticipantsList;
+        if (membersCount > 5) {
+          firstFiveEventParticipantsList = firstFiveEventParticipantsList.sublist(0, 5);
+        }
+
+        return GestureDetector(
+          onTap: () => showAllParticipantListDialog(roomId),
+          child: Wrap(
+            direction: Axis.horizontal,
+            spacing: -10,
+            children: [
+              ...firstFiveEventParticipantsList.map(
+                (a) => MemberAvatar(
+                  memberId: a,
+                  roomId: roomId,
                 ),
-                size: 18,
-              );
-            },
-            error: (err, stackTrace) => fallbackAvatar(roomId),
-            loading: () => fallbackAvatar(roomId),
-          );
-          avtarList.add(
-            Padding(padding: const EdgeInsets.all(5.0), child: participant),
-          );
-        }
+              ),
+              if (membersCount > 5)
+                CircleAvatar(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Text(
+                      '+${membersCount - 5}',
+                      textAlign: TextAlign.center,
+                      textScaler: const TextScaler.linear(0.8),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-        return Wrap(children: avtarList);
+  void showAllParticipantListDialog(String roomId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      useSafeArea: true,
+      builder: (_) {
+        return FractionallySizedBox(
+          heightFactor: 1,
+          child: ParticipantsList(
+            roomId: roomId,
+            participants: eventParticipantsList.value,
+          ),
+        );
       },
     );
   }
@@ -477,7 +561,7 @@ class _EventDetailPageConsumerState extends ConsumerState<EventDetailPage> {
         mainAxisSize: MainAxisSize.max,
         children: [
           Text(
-            'About',
+            L10n.of(context).about,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 10),

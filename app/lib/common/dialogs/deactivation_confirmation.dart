@@ -1,8 +1,10 @@
 import 'package:acter/common/providers/sdk_provider.dart';
-import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter/common/toolkit/buttons/danger_action_button.dart';
+
 import 'package:acter/common/utils/routes.dart';
-import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,14 +16,15 @@ const deactivatePasswordField = Key('deactivate-password-field');
 // Ref can be used to read any provider which are declared.
 void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
   TextEditingController passwordController = TextEditingController();
+  final theme = Theme.of(context).colorScheme;
   showDialog(
     context: context,
     builder: (BuildContext ctx) {
       return AlertDialog(
         title: Text(
-          'Deactivate Account',
+          L10n.of(context).deactivateAccount,
           style: TextStyle(
-            color: AppTheme.brandColorScheme.error,
+            color: theme.error,
             fontSize: 26,
           ),
         ),
@@ -32,29 +35,21 @@ void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     color: Theme.of(context).colorScheme.background,
                     child: Column(
                       children: [
                         Text(
-                          'Careful: You are about to permanently deactivate your account ',
+                          L10n.of(context).deactivateAccountTitle,
                           style: TextStyle(
-                            color: AppTheme.brandColorScheme.error,
+                            color: theme.error,
                             fontSize: 20,
                           ),
                         ),
-                        const Text('If you proceed: \n  \n'
-                            '- All your personal data will be removed from your homeserver, including display name and avatar \n'
-                            '- All your sessions will be closed immediately, no other device will be able to continue their sessions \n'
-                            '- You will leave all rooms, chats, spaces and DMs that you are in \n'
-                            '- You will not be able to reactivate your account \n'
-                            '- You will no longer be able to log in \n'
-                            '- No one will be able to reuse your username (MXID), including you: this username will remain unavailable indefinitely \n'
-                            '- You will be removed from the identity server, if you provided any information to be found through that (e.g. email or phone number) \n'
-                            '- All local data, including any encryption keys, will be permanently deleted from this device \n'
-                            '- Your old messages will still be visible to people who received them, just like emails you sent in the past. \n'
-                            '\n You will not be able to reverse any of this. This is a permanent and irrevocable action.'),
+                        Text(L10n.of(context).deactivateAccountDescription),
                       ],
                     ),
                   ),
@@ -63,9 +58,9 @@ void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
                 child: Text(
-                  'Please provide your user password to confirm you want to deactivate your account.',
+                  L10n.of(context).deactivateAccountPasswordTitle,
                   style: TextStyle(
-                    color: AppTheme.brandColorScheme.error,
+                    color: theme.error,
                     fontSize: 20,
                   ),
                 ),
@@ -76,77 +71,64 @@ void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
                   key: deactivatePasswordField,
                   controller: passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(hintText: 'Password'),
+                  decoration: InputDecoration(
+                    hintText: L10n.of(context).password,
+                  ),
                 ),
               ),
             ],
           ),
         ),
         actions: <Widget>[
-          TextButton(
+          OutlinedButton(
             key: deactivateCancelBtn,
             onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-            child: const Text('Cancel'),
+            child: Text(L10n.of(context).cancel),
           ),
-          TextButton(
+          ActerDangerActionButton(
             key: deactivateConfirmBtn,
-            onPressed: () async {
-              showAdaptiveDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (context) => DefaultDialog(
-                  title: Text(
-                    'Deactivating your account',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  isLoader: true,
-                ),
-              );
-              final sdk = await ref.read(sdkProvider.future);
-              try {
-                if (!await sdk.deactivateAndDestroyCurrentClient(
-                  passwordController.text,
-                )) {
-                  throw 'Deactivation and removing all local data failed';
-                }
-                // ignore: use_build_context_synchronously
-                if (!context.mounted) {
-                  return;
-                }
-                // remove pop up
-                Navigator.of(context, rootNavigator: true).pop();
-                // remove ourselves
-                Navigator.of(context, rootNavigator: true).pop();
-                context.goNamed(Routes.main.name);
-              } catch (err) {
-                // We are doing as expected, but the lints triggers.
-                // ignore: use_build_context_synchronously
-                if (!context.mounted) {
-                  return;
-                }
-
-                showAdaptiveDialog(
-                  context: context,
-                  builder: (context) => DefaultDialog(
-                    title: Text(
-                      'Deactivating failed: \n $err"',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    actions: <Widget>[
-                      ElevatedButton(
-                        onPressed: () =>
-                            Navigator.of(context, rootNavigator: true).pop(),
-                        child: const Text('Close'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
-            child: const Text('Deactivate'),
+            onPressed: () async => _onConfirm(
+              context,
+              ref,
+              passwordController.text,
+            ),
+            child: Text(L10n.of(context).deactivate),
           ),
         ],
       );
     },
   );
+}
+
+Future<void> _onConfirm(
+  BuildContext context,
+  WidgetRef ref,
+  String password,
+) async {
+  EasyLoading.show(status: L10n.of(context).deactivatingYourAccount);
+  final sdk = await ref.read(sdkProvider.future);
+  try {
+    final result = await sdk.deactivateAndDestroyCurrentClient(password);
+    if (!result) {
+      if (context.mounted) {
+        EasyLoading.showError(
+          L10n.of(context).deactivationAndRemovingFailed,
+          duration: const Duration(seconds: 3),
+        );
+      }
+      return;
+    }
+    EasyLoading.dismiss();
+    if (!context.mounted) return;
+    context.goNamed(Routes.main.name);
+  } catch (err) {
+    if (!context.mounted) {
+      EasyLoading.dismiss();
+      return;
+    }
+    EasyLoading.showError(
+      L10n.of(context).deactivatingFailed(err),
+      duration: const Duration(seconds: 3),
+    );
+  }
 }

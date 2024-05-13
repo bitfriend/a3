@@ -1,20 +1,20 @@
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/utils/routes.dart';
 import 'package:acter/features/events/providers/event_providers.dart';
-import 'package:acter/features/events/widgets/events_item.dart';
+import 'package:acter/features/events/widgets/event_item.dart';
 import 'package:acter/features/events/widgets/skeletons/event_item_skeleton_widget.dart';
 import 'package:acter/features/news/model/news_references_model.dart';
 import 'package:acter/features/news/widgets/news_item_slide/video_slide.dart';
 import 'package:acter/features/news/widgets/news_side_bar.dart';
 import 'package:acter/features/news/widgets/news_item_slide/image_slide.dart';
 import 'package:acter/features/news/widgets/news_item_slide/text_slide.dart';
+import 'package:acter/router/utils.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:carousel_indicator/carousel_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class NewsItem extends ConsumerStatefulWidget {
   final Client client;
@@ -89,7 +89,9 @@ class _NewsItemState extends ConsumerState<NewsItem> {
               default:
                 return Expanded(
                   child: Center(
-                    child: Text('$slideType slides not yet supported'),
+                    child: Text(
+                      L10n.of(context).slidesNotYetSupported(slideType),
+                    ),
                   ),
                 );
             }
@@ -104,18 +106,13 @@ class _NewsItemState extends ConsumerState<NewsItem> {
               child: newsActionButtons(newsSlide: slides[currentSlideIndex]),
             ),
             InkWell(
-              onTap: () {
-                context.pushNamed(
-                  Routes.space.name,
-                  pathParameters: {'spaceId': roomId},
-                );
-              },
+              onTap: () => goToSpace(context, roomId),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: space.when(
                   data: (space) =>
-                      Text(space!.spaceProfileData.displayName ?? roomId),
-                  error: (e, st) => Text('Error loading space: $e'),
+                      Text(space.spaceProfileData.displayName ?? roomId),
+                  error: (e, st) => Text(L10n.of(context).errorLoadingSpace(e)),
                   loading: () => Skeletonizer(
                     child: Text(roomId),
                   ),
@@ -170,13 +167,14 @@ class _NewsItemState extends ConsumerState<NewsItem> {
               );
             },
             loading: () => const EventItemSkeleton(),
-            error: (e, s) => Center(child: Text('Event failed: $e')),
+            error: (e, s) =>
+                Center(child: Text(L10n.of(context).failedToLoadEvent(e))),
           );
     } else {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('Unsupported - Please upgrade!'),
+          padding: const EdgeInsets.all(16),
+          child: Text(L10n.of(context).unsupportedPleaseUpgrade),
         ),
       );
     }

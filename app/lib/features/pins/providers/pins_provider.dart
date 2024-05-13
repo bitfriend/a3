@@ -1,10 +1,9 @@
-import 'package:acter/common/providers/attachment_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/features/pins/models/pin_edit_state/pin_edit_state.dart';
 import 'package:acter/features/pins/providers/notifiers/edit_state_notifier.dart';
 import 'package:acter/features/pins/providers/notifiers/pins_notifiers.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 
 final pinsProvider =
     AsyncNotifierProvider.autoDispose<AsyncPinsNotifier, List<ActerPin>>(
@@ -39,11 +38,3 @@ final pinEditProvider = StateNotifierProvider.family
   (ref, pin) => PinEditNotifier(pin: pin, ref: ref),
 );
 
-final pinAttachmentManagerProvider =
-    FutureProvider.family.autoDispose<AttachmentsManager, ActerPin>(
-  (ref, acterPin) async {
-    final manager = await acterPin.attachments();
-    final liveManager = ref.watch(attachmentsManagerProvider(manager));
-    return liveManager;
-  },
-);

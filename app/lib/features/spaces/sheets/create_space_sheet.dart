@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:acter/common/providers/sdk_provider.dart';
 import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
@@ -8,12 +9,14 @@ import 'package:acter/common/widgets/sliver_scaffold.dart';
 import 'package:acter/common/widgets/spaces/select_space_form_field.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:acter/features/spaces/model/keys.dart';
+import 'package:acter/router/utils.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 // interface data providers
 final titleProvider = StateProvider<String>((ref) => '');
@@ -22,6 +25,7 @@ final avatarProvider = StateProvider.autoDispose<String>((ref) => '');
 
 class CreateSpacePage extends ConsumerStatefulWidget {
   final String? initialParentsSpaceId;
+
   const CreateSpacePage({super.key, this.initialParentsSpaceId});
 
   @override
@@ -48,7 +52,9 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
     final currentParentSpace = ref.watch(selectedSpaceIdProvider);
     final parentSelected = currentParentSpace != null;
     return SliverScaffold(
-      header: parentSelected ? 'Create Subspace' : 'Create Space',
+      header: parentSelected
+          ? L10n.of(context).createSubspace
+          : L10n.of(context).createSpace,
       addActions: true,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -60,9 +66,9 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
               children: <Widget>[
                 Column(
                   children: <Widget>[
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 5),
-                      child: Text('Avatar'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Text(L10n.of(context).avatar),
                     ),
                     Consumer(builder: avatarBuilder),
                   ],
@@ -72,12 +78,12 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 5),
-                        child: Text('Space Name'),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Text(L10n.of(context).spaceName),
                       ),
                       InputTextField(
-                        hintText: 'Type Name',
+                        hintText: L10n.of(context).typeName,
                         key: CreateSpaceKeys.titleField,
                         textInputType: TextInputType.multiline,
                         controller: _titleController,
@@ -85,7 +91,7 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'eg. Global Movement',
+                        L10n.of(context).egGlobalMovement,
                         style: Theme.of(context).textTheme.labelSmall!.copyWith(
                               color: Theme.of(context).colorScheme.neutral4,
                             ),
@@ -99,28 +105,28 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text('About'),
+                Text(L10n.of(context).about),
                 const SizedBox(height: 15),
                 InputTextField(
                   controller: _descriptionController,
-                  hintText: 'Description',
+                  hintText: L10n.of(context).description,
                   textInputType: TextInputType.multiline,
                   maxLines: 10,
                 ),
-                const SelectSpaceFormField(
+                SelectSpaceFormField(
                   canCheck: 'CanLinkSpaces',
                   mandatory: false,
-                  title: 'Parent space',
-                  selectTitle: 'Select parent space',
+                  title: L10n.of(context).parentSpace,
+                  selectTitle: L10n.of(context).selectParentSpace,
                 ),
               ],
             ),
           ],
         ),
       ),
-      confirmActionTitle: 'Create Space',
+      confirmActionTitle: L10n.of(context).createSpace,
       confirmActionKey: CreateSpaceKeys.submitBtn,
-      cancelActionTitle: 'Cancel',
+      cancelActionTitle: L10n.of(context).cancel,
       confirmActionOnPressed: titleInput.trim().isEmpty
           ? null
           : () {
@@ -165,7 +171,7 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
 
   void _handleAvatarUpload() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      dialogTitle: 'Upload Avatar',
+      dialogTitle: L10n.of(context).uploadAvatar,
       type: FileType.image,
     );
     if (result != null) {
@@ -181,7 +187,7 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
     String spaceName,
     String description,
   ) async {
-    EasyLoading.show(status: 'Creating Space');
+    EasyLoading.show(status: L10n.of(context).creatingSpace);
     try {
       final sdk = await ref.read(sdkProvider.future);
       final config = sdk.api.newSpaceSettingsBuilder();
@@ -202,24 +208,21 @@ class _CreateSpacePageConsumerState extends ConsumerState<CreateSpacePage> {
       if (parentRoomId != null) {
         final space = await ref.read(spaceProvider(parentRoomId).future);
         await space.addChildRoom(roomId.toString());
+        // spaceRelations come from the server and must be manually invalidated
+        ref.invalidate(spaceRelationsOverviewProvider(parentRoomId));
       }
 
       EasyLoading.dismiss();
-      // We are doing as expected, but the lints triggers.
-      // ignore: use_build_context_synchronously
+      if (!context.mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // pop the create sheet
+      goToSpace(context, roomId.toString());
+    } catch (err) {
       if (!context.mounted) {
+        EasyLoading.dismiss();
         return;
       }
-      Navigator.of(context, rootNavigator: true).pop(); // pop the create sheet
-      context.goNamed(
-        Routes.space.name,
-        pathParameters: {
-          'spaceId': roomId.toString(),
-        },
-      );
-    } catch (err) {
       EasyLoading.showError(
-        'Creating space failed $err',
+        L10n.of(context).creatingSpaceFailed(err),
         duration: const Duration(seconds: 3),
       );
     }

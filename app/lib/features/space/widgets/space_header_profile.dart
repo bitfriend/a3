@@ -3,11 +3,13 @@ import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/spaces/space_info.dart';
 import 'package:acter/features/space/widgets/member_avatar.dart';
+import 'package:acter/router/utils.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class SpaceHeaderProfile extends ConsumerWidget {
   static const headerKey = Key('space-header');
@@ -45,18 +47,10 @@ class SpaceHeaderProfile extends ConsumerWidget {
                         ),
                       ]
                     : [],
-                onAvatarTap: () => context.pushNamed(
-                  Routes.space.name,
-                  pathParameters: {
-                    'spaceId': spaceId,
-                  },
-                ),
-                onParentBadgeTap: () => context.pushNamed(
-                  Routes.space.name,
-                  pathParameters: {
-                    'spaceId':
-                        canonicalParent.valueOrNull!.space.getRoomIdStr(),
-                  },
+                onAvatarTap: () => goToSpace(context, spaceId),
+                onParentBadgeTap: () => goToSpace(
+                  context,
+                  canonicalParent.valueOrNull!.space.getRoomIdStr(),
                 ),
                 badgeSize: 30,
                 size: 80,
@@ -82,8 +76,10 @@ class SpaceHeaderProfile extends ConsumerWidget {
           ),
         );
       },
-      error: (error, stack) => Text('Loading failed: $error'),
-      loading: () => const Text('Loading'),
+      error: (error, stack) => Text(
+        L10n.of(context).loadingFailed(error),
+      ),
+      loading: () => Text(L10n.of(context).loading),
     );
   }
 
@@ -92,7 +88,7 @@ class SpaceHeaderProfile extends ConsumerWidget {
     WidgetRef ref,
     Widget? child,
   ) {
-    final spaceMembers = ref.watch(spaceMembersProvider(spaceId));
+    final spaceMembers = ref.watch(membersIdsProvider(spaceId));
     return spaceMembers.when(
       data: (members) {
         final membersCount = members.length;
@@ -112,7 +108,7 @@ class SpaceHeaderProfile extends ConsumerWidget {
               spacing: -12,
               children: [
                 ...members.map(
-                  (a) => MemberAvatar(member: a),
+                  (a) => MemberAvatar(memberId: a, roomId: spaceId),
                 ),
                 if (membersCount > 5)
                   CircleAvatar(
@@ -131,7 +127,9 @@ class SpaceHeaderProfile extends ConsumerWidget {
           ),
         );
       },
-      error: (error, stack) => Text('Loading members failed: $error'),
+      error: (error, stack) => Text(
+        L10n.of(context).loadingMembersFailed(error),
+      ),
       loading: () => const Skeletonizer(
         child: Wrap(
           direction: Axis.horizontal,

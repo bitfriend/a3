@@ -35,10 +35,6 @@ impl NewsEntry {
         &self.meta.sender
     }
 
-    pub fn key_from_event(event_id: &EventId) -> String {
-        event_id.to_string()
-    }
-
     pub fn updater(&self) -> NewsEntryUpdateBuilder {
         NewsEntryUpdateBuilder::default()
             .news_entry(self.meta.event_id.clone())
@@ -56,6 +52,9 @@ impl ActerModel for NewsEntry {
 
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
+    }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
     }
 
     fn capabilities(&self) -> &[Capability] {
@@ -96,6 +95,7 @@ impl From<OriginalMessageLikeEvent<NewsEntryEventContent>> for NewsEntry {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }
@@ -115,14 +115,16 @@ impl ActerModel for NewsEntryUpdate {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
         default_model_execute(store, self.into()).await
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        let event_ids = vec![NewsEntry::key_from_event(&self.inner.news_entry.event_id)];
-        Some(event_ids)
+        Some(vec![self.inner.news_entry.event_id.to_string()])
     }
 }
 
@@ -150,6 +152,7 @@ impl From<OriginalMessageLikeEvent<NewsEntryUpdateEventContent>> for NewsEntryUp
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }

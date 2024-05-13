@@ -3,6 +3,7 @@ import 'package:acter/common/providers/room_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/themes/colors/color_scheme.dart';
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/chat/convo_card.dart';
 import 'package:acter/common/widgets/chat/convo_hierarchy_card.dart';
@@ -10,6 +11,7 @@ import 'package:acter/common/widgets/empty_state_widget.dart';
 import 'package:acter/features/space/providers/notifiers/space_hierarchy_notifier.dart';
 import 'package:acter/features/space/providers/space_providers.dart';
 import 'package:acter/features/space/widgets/space_header.dart';
+import 'package:acter/router/utils.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:riverpod_infinite_scroll/riverpod_infinite_scroll.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 
 class SpaceChatsPage extends ConsumerWidget {
   static const createChatKey = Key('space-chat-create');
@@ -60,11 +63,11 @@ class SpaceChatsPage extends ConsumerWidget {
                       queryParameters: {'spaceId': spaceIdOrAlias},
                       extra: 1,
                     ),
-                    child: const Row(
+                    child: Row(
                       children: <Widget>[
-                        Text('Create Chat'),
-                        Spacer(),
-                        Icon(Atlas.chats),
+                        Text(L10n.of(context).createChat),
+                        const Spacer(),
+                        const Icon(Atlas.chats),
                       ],
                     ),
                   ),
@@ -73,11 +76,11 @@ class SpaceChatsPage extends ConsumerWidget {
                       Routes.linkChat.name,
                       pathParameters: {'spaceId': spaceIdOrAlias},
                     ),
-                    child: const Row(
+                    child: Row(
                       children: <Widget>[
-                        Text('Link existing Chat'),
-                        Spacer(),
-                        Icon(Atlas.chats),
+                        Text(L10n.of(context).linkExistingChat),
+                        const Spacer(),
+                        const Icon(Atlas.chats),
                       ],
                     ),
                   ),
@@ -105,18 +108,17 @@ class SpaceChatsPage extends ConsumerWidget {
     return Center(
       heightFactor: 1,
       child: EmptyState(
-        title: 'No chats in this space yet',
-        subtitle:
-            'Get the conversation going to start organizing collaborating',
+        title: L10n.of(context).noChatsInThisSpaceYet,
+        subtitle: L10n.of(context).getConversationGoingToStart,
         image: 'assets/images/empty_chat.svg',
         primaryButton: canCreateSpace
-            ? ElevatedButton(
+            ? ActerPrimaryActionButton(
                 onPressed: () => context.pushNamed(
                   Routes.createChat.name,
                   queryParameters: {'spaceId': spaceIdOrAlias},
                   extra: 1,
                 ),
-                child: const Text('Create Space Chat'),
+                child: Text(L10n.of(context).createSpaceChat),
               )
             : null,
       ),
@@ -135,22 +137,21 @@ class SpaceChatsPage extends ConsumerWidget {
             child: ConvoCard(
               room: rooms[index],
               showParent: false,
-              onTap: () => context.goNamed(
-                Routes.chatroom.name,
-                pathParameters: {'roomId': rooms[index].getRoomIdStr()},
-              ),
+              onTap: () => goToChat(context, rooms[index].getRoomIdStr()),
             ),
           ),
         );
       },
       error: (error, stackTrace) => SliverToBoxAdapter(
-        child: Center(child: Text('Failed to load events due to $error')),
+        child: Center(
+          child: Text(L10n.of(context).failedToLoadChatsDueTo(error)),
+        ),
       ),
-      loading: () => const SliverToBoxAdapter(
+      loading: () => SliverToBoxAdapter(
         child: Skeletonizer(
           child: ListTile(
-            title: Text('roomId'),
-            subtitle: Text('loading'),
+            title: Text(L10n.of(context).roomId),
+            subtitle: Text(L10n.of(context).loading),
           ),
         ),
       ),
@@ -173,7 +174,10 @@ class SpaceChatsPage extends ConsumerWidget {
           RiverPagedBuilder<Next?, SpaceHierarchyRoomInfo>.autoDispose(
         firstPageKey: const Next(isStart: true),
         provider: provider,
-        itemBuilder: (context, item, index) => ConvoHierarchyCard(space: item),
+        itemBuilder: (context, item, index) => ConvoHierarchyCard(
+          parentId: spaceIdOrAlias,
+          roomInfo: item,
+        ),
         noItemsFoundIndicatorBuilder: (context, controller) =>
             _renderEmpty(context, ref),
         pagedBuilder: (controller, builder) => PagedSliverList(
@@ -182,10 +186,11 @@ class SpaceChatsPage extends ConsumerWidget {
         ),
       ),
       error: (e, s) => SliverToBoxAdapter(
-        child: Text('Error loading related chats: $e'),
+        child: Text(L10n.of(context).errorLoadingRelatedChats(e)),
       ),
-      loading: () =>
-          const SliverToBoxAdapter(child: Text('loading other chats')),
+      loading: () => SliverToBoxAdapter(
+        child: Text(L10n.of(context).loadingOtherChats),
+      ),
     );
   }
 

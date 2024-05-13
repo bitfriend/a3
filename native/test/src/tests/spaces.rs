@@ -1,4 +1,5 @@
-use acter::new_space_settings_builder;
+use acter::{new_space_settings_builder, ruma_events::StateEventType};
+use acter_core::statics::KEYS;
 use anyhow::{bail, Result};
 use tokio::sync::broadcast::error::TryRecvError;
 use tokio_retry::{
@@ -26,13 +27,48 @@ name = "{{ main.display_name }}'s first test space"
 [objects.third_space]
 type = "space"
 name = "{{ main.display_name }}'s second test space"
+
+[objects.main_space_pin]
+type = "pin"
+in = "main_space"
+title = "Acter Website"
+url = "https://acter.global"
+
+[objects.main_space_news]
+type = "news-entry"
+in = "main_space"
+slides = []
+
+[objects.second_space_pin]
+type = "pin"
+in = "second_space"
+title = "Acter Website"
+url = "https://acter.global"
+
+[objects.second_space_news]
+type = "news-entry"
+in = "second_space"
+slides = []
+
+[objects.third_space_pin]
+type = "pin"
+in = "third_space"
+title = "Acter Website"
+url = "https://acter.global"
+
+
+[objects.third_space_news]
+type = "news-entry"
+in = "third_space"
+slides = []
+
 "#;
 
 #[tokio::test]
-async fn spaces_deleted() -> Result<()> {
+async fn leaving_spaces() -> Result<()> {
     let _ = env_logger::try_init();
     let (user, _sync_state, _engine) =
-        random_user_with_template("spaces_deleted", THREE_SPACES_TMPL).await?;
+        random_user_with_template("leaving_spaces", THREE_SPACES_TMPL).await?;
 
     // wait for sync to catch up
     let retry_strategy = FibonacciBackoff::from_millis(100).map(jitter).take(10);
@@ -42,9 +78,8 @@ async fn spaces_deleted() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 3 {
                 bail!("not all spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -53,13 +88,33 @@ async fn spaces_deleted() -> Result<()> {
 
     assert_eq!(spaces.len(), 3);
 
+    // make sure all pins are synced
+    let retry_strategy = FibonacciBackoff::from_millis(100).map(jitter).take(10);
+    let fetcher_client = user.clone();
+    Retry::spawn(retry_strategy.clone(), move || {
+        let client = fetcher_client.clone();
+        async move {
+            if client.pins().await?.len() != 3 {
+                bail!("not all pins found");
+            }
+            if client.latest_news_entries(10).await?.len() != 3 {
+                bail!("not all news found");
+            }
+            Ok(())
+        }
+    })
+    .await?;
+
     let first = spaces.pop().unwrap();
     let second = spaces.pop().unwrap();
     let last = spaces.pop().unwrap();
 
     let mut first_listener = user.subscribe(first.room_id().to_string());
+    let mut news_listener = user.subscribe(KEYS::NEWS.to_string());
     let mut second_listener = user.subscribe(second.room_id().to_string());
     let mut last_listener = user.subscribe(last.room_id().to_string());
+
+    assert!(news_listener.is_empty(), "News already has items");
 
     first.leave().await?;
     let fetcher_client = user.clone();
@@ -68,19 +123,9 @@ async fn spaces_deleted() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 2 {
                 bail!("not the right number of spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
-    })
-    .await?;
-
-    let retry_strategy = FibonacciBackoff::from_millis(500).map(jitter).take(10);
-    Retry::spawn(retry_strategy.clone(), || async {
-        if user.spaces().await?.is_empty() {
-            bail!("still no spaces found");
-        };
-        Ok(())
     })
     .await?;
 
@@ -91,9 +136,23 @@ async fn spaces_deleted() -> Result<()> {
             bail!("First still empty");
         }
         Ok(())
-    });
+    })
+    .await?;
+    Retry::spawn(retry_strategy.clone(), || async {
+        if news_listener.is_empty() {
+            // not yet.
+            bail!("News listener didn't react");
+        }
+        Ok(())
+    })
+    .await?;
+
+    // the objects have been reduced
+    assert_eq!(user.pins().await?.len(), 2);
+    assert_eq!(user.latest_news_entries(10).await?.len(), 2);
 
     assert!(first_listener.try_recv().is_ok());
+    assert!(news_listener.try_recv().is_ok());
     assert_eq!(second_listener.try_recv(), Err(TryRecvError::Empty));
     assert_eq!(last_listener.try_recv(), Err(TryRecvError::Empty));
 
@@ -104,9 +163,8 @@ async fn spaces_deleted() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 1 {
                 bail!("not the right number of spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -119,7 +177,20 @@ async fn spaces_deleted() -> Result<()> {
         Ok(())
     })
     .await?;
+    Retry::spawn(retry_strategy.clone(), || async {
+        if news_listener.is_empty() {
+            // not yet.
+            bail!("News listener didn't react");
+        }
+        Ok(())
+    })
+    .await?;
 
+    // the objects have been reduced again
+    assert_eq!(user.pins().await?.len(), 1);
+    assert_eq!(user.latest_news_entries(10).await?.len(), 1);
+
+    assert!(news_listener.try_recv().is_ok());
     assert_eq!(first_listener.try_recv(), Err(TryRecvError::Empty));
     assert!(second_listener.try_recv().is_ok());
     assert_eq!(last_listener.try_recv(), Err(TryRecvError::Empty));
@@ -152,9 +223,8 @@ async fn create_subspace() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 1 {
                 bail!("not all spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -178,9 +248,8 @@ async fn create_subspace() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 2 {
                 bail!("not the right number of spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -197,7 +266,7 @@ async fn create_subspace() -> Result<()> {
     Retry::spawn(retry_strategy.clone(), || async {
         if user.spaces().await?.is_empty() {
             bail!("still no spaces found");
-        };
+        }
         Ok(())
     })
     .await?;
@@ -218,9 +287,8 @@ async fn update_name() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 1 {
                 bail!("not all spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -233,6 +301,25 @@ async fn update_name() -> Result<()> {
     let listener = space.subscribe();
     let space_id = space.room_id().to_string();
 
+    // wait for sync to receive permission
+    let retry_strategy = FibonacciBackoff::from_millis(100).map(jitter).take(10);
+    let space_clone = space.clone();
+    let user_id = user.user_id()?;
+    Retry::spawn(retry_strategy.clone(), move || {
+        let space = space_clone.clone();
+        let uid = user_id.clone();
+        async move {
+            let permitted = space
+                .can_user_send_state(&uid, StateEventType::RoomName)
+                .await?;
+            if !permitted {
+                bail!("space name change was not permitted");
+            }
+            Ok(())
+        }
+    })
+    .await?;
+
     // set name
 
     let _event_id = space.set_name("New Name".to_owned()).await?;
@@ -244,11 +331,11 @@ async fn update_name() -> Result<()> {
         let client = fetcher_client.clone();
         let space_id = space_id_clone.clone();
         async move {
-            if client.space(space_id).await?.name() == Some("New Name".to_owned()) {
-                Ok(())
-            } else {
-                bail!("Name not set")
+            let space = client.space(space_id).await?;
+            if space.name() != Some("New Name".to_owned()) {
+                bail!("Name not set");
             }
+            Ok(())
         }
     })
     .await?;
@@ -280,11 +367,10 @@ async fn update_name() -> Result<()> {
     //     let client = fetcher_client.clone();
     //     let space_id = space_id_clone.clone();
     //     async move {
-    //         if client.space(space_id).await?.name().is_none() {
-    //             Ok(())
-    //         } else {
-    //             bail!("Name not set")
+    //         if client.space(space_id).await?.name().is_some() {
+    //             bail!("Name not set");
     //         }
+    //         Ok(())
     //     }
     // })
     // .await?;
@@ -324,9 +410,8 @@ async fn update_topic() -> Result<()> {
         async move {
             if client.spaces().await?.len() != 1 {
                 bail!("not all spaces found");
-            } else {
-                Ok(())
             }
+            Ok(())
         }
     })
     .await?;
@@ -350,11 +435,11 @@ async fn update_topic() -> Result<()> {
         let client = fetcher_client.clone();
         let space_id = space_id_clone.clone();
         async move {
-            if client.space(space_id).await?.topic() == Some("New topic".to_owned()) {
-                Ok(())
-            } else {
-                bail!("Topic not set")
+            let space = client.space(space_id).await?;
+            if space.topic() != Some("New topic".to_owned()) {
+                bail!("Topic not set");
             }
+            Ok(())
         }
     })
     .await?;
@@ -364,7 +449,7 @@ async fn update_topic() -> Result<()> {
     Retry::spawn(retry_strategy.clone(), || async {
         if listener.is_empty() {
             bail!("no updates received");
-        };
+        }
         Ok(())
     })
     .await?;

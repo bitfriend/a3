@@ -47,10 +47,6 @@ impl TaskList {
         format!("{}::{}", self.meta.event_id, KEYS::TASKS::TASKS)
     }
 
-    pub fn key_from_event(event_id: &EventId) -> String {
-        event_id.to_string()
-    }
-
     pub fn redacted(&self) -> bool {
         false
     }
@@ -79,6 +75,7 @@ impl From<OriginalMessageLikeEvent<TaskListEventContent>> for TaskList {
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
             task_stats: Default::default(),
         }
@@ -96,9 +93,16 @@ impl ActerModel for TaskList {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     fn capabilities(&self) -> &[Capability] {
-        &[Capability::Commentable, Capability::Reactable]
+        &[
+            Capability::Commentable,
+            Capability::Reactable,
+            Capability::Attachmentable,
+        ]
     }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
@@ -140,15 +144,16 @@ impl ActerModel for TaskListUpdate {
     fn event_id(&self) -> &EventId {
         &self.meta.event_id
     }
+    fn room_id(&self) -> &RoomId {
+        &self.meta.room_id
+    }
 
     async fn execute(self, store: &Store) -> Result<Vec<String>> {
         default_model_execute(store, self.into()).await
     }
 
     fn belongs_to(&self) -> Option<Vec<String>> {
-        Some(vec![TaskList::key_from_event(
-            &self.inner.task_list.event_id,
-        )])
+        Some(vec![self.inner.task_list.event_id.to_string()])
     }
 }
 
@@ -176,6 +181,7 @@ impl From<OriginalMessageLikeEvent<TaskListUpdateEventContent>> for TaskListUpda
                 event_id,
                 sender,
                 origin_server_ts,
+                redacted: None,
             },
         }
     }

@@ -2,19 +2,20 @@ import 'package:acter/common/providers/room_providers.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:settings_ui/settings_ui.dart';
 import 'package:logging/logging.dart';
+import 'package:settings_ui/settings_ui.dart';
 
 final _log = Logger('a3::room::notification_settings_tile');
 
-String? notifToText(String curNotifStatus) {
+String? notifToText(BuildContext context, String curNotifStatus) {
   if (curNotifStatus == 'muted') {
-    return 'Muted';
+    return L10n.of(context).muted;
   } else if (curNotifStatus == 'mentions') {
-    return 'Only on mentions and keywords';
+    return L10n.of(context).mentionsAndKeywordsOnly;
   } else if (curNotifStatus == 'all') {
-    return 'All Messages';
+    return L10n.of(context).allMessages;
   } else {
     return null;
   }
@@ -44,13 +45,15 @@ class _NotificationSettingsTile extends ConsumerWidget {
     // ignore: always_declare_return_types
     return SettingsTile(
       title: Text(
-        title ?? 'Notifications',
+        title ?? L10n.of(context).notifications,
         style: tileTextTheme,
       ),
       description: Text(
-        notifToText(curNotifStatus ?? '') ??
+        notifToText(context, curNotifStatus ?? '') ??
             (defaultTitle ??
-                'Default (${notifToText(defaultNotificationStatus.valueOrNull ?? '') ?? 'undefined'})'),
+                L10n.of(context).defaultNotification(
+                  '(${notifToText(context, defaultNotificationStatus.valueOrNull ?? '') ?? L10n.of(context).undefined})',
+                )),
       ),
       leading: curNotifStatus == 'muted'
           ? const Icon(Atlas.bell_dash_bold, size: 18)
@@ -58,38 +61,14 @@ class _NotificationSettingsTile extends ConsumerWidget {
       trailing: PopupMenuButton<String>(
         initialValue: curNotifStatus,
         // Callback that sets the selected popup menu item.
-        onSelected: (String newMode) async {
-          _log.info('new value: $newMode');
-          final room = await ref.read(maybeRoomProvider(roomId).future);
-          if (room == null) {
-            EasyLoading.showError(
-              'Room not found',
-            );
-            return;
-          }
-          EasyLoading.showProgress(0);
-          // '' is a special case resetting to default.
-          if (await room.setNotificationMode(
-            newMode == '' ? null : newMode,
-          )) {
-            EasyLoading.showSuccess(
-              'Notification status submitted',
-            );
-            await Future.delayed(const Duration(seconds: 1), () {
-              // FIXME: we want to refresh the view but don't know
-              //        when the event was confirmed form sync :(
-              // let's hope that a second delay is reasonable enough
-              ref.invalidate(maybeRoomProvider(roomId));
-            });
-          }
-        },
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        onSelected: (newMode) => onMenuSelected(context, ref, newMode),
+        itemBuilder: (BuildContext context) => [
           PopupMenuItem<String>(
             value: 'all',
             child: notificationSettingItemUI(
               context,
               curNotifStatus == 'all',
-              'All Messages',
+              L10n.of(context).allMessages,
             ),
           ),
           if (includeMentions)
@@ -98,7 +77,7 @@ class _NotificationSettingsTile extends ConsumerWidget {
               child: notificationSettingItemUI(
                 context,
                 curNotifStatus == 'mentions',
-                'Mentions and Keywords only',
+                L10n.of(context).mentionsAndKeywordsOnly,
               ),
             ),
           PopupMenuItem<String>(
@@ -106,7 +85,7 @@ class _NotificationSettingsTile extends ConsumerWidget {
             child: notificationSettingItemUI(
               context,
               curNotifStatus == 'muted',
-              'Muted',
+              L10n.of(context).muted,
             ),
           ),
           PopupMenuItem<String>(
@@ -115,7 +94,9 @@ class _NotificationSettingsTile extends ConsumerWidget {
               context,
               curNotifStatus == '',
               defaultTitle ??
-                  'Default (${notifToText(defaultNotificationStatus.valueOrNull ?? '') ?? 'unedefined'})',
+                  L10n.of(context).defaultNotification(
+                    '(${notifToText(context, defaultNotificationStatus.valueOrNull ?? '') ?? L10n.of(context).undefined})',
+                  ),
             ),
           ),
         ],
@@ -142,6 +123,61 @@ class _NotificationSettingsTile extends ConsumerWidget {
             )
           : null,
     );
+  }
+
+  Future<void> onMenuSelected(
+    BuildContext context,
+    WidgetRef ref,
+    String newMode,
+  ) async {
+    _log.info('new value: $newMode');
+    EasyLoading.show(status: L10n.of(context).changingNotificationMode);
+    try {
+      final room = await ref.read(maybeRoomProvider(roomId).future);
+      if (room == null) {
+        if (!context.mounted) {
+          EasyLoading.dismiss();
+          return;
+        }
+        EasyLoading.showError(
+          L10n.of(context).roomNotFound,
+          duration: const Duration(seconds: 3),
+        );
+        return;
+      }
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      // '' is a special case resetting to default.
+      final res =
+          await room.setNotificationMode(newMode == '' ? null : newMode);
+      if (!res) {
+        EasyLoading.dismiss();
+        return;
+      }
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showToast(L10n.of(context).notificationStatusSubmitted);
+      await Future.delayed(const Duration(seconds: 1), () {
+        // FIXME: we want to refresh the view but don't know
+        //        when the event was confirmed form sync :(
+        // let's hope that a second delay is reasonable enough
+        ref.invalidate(maybeRoomProvider(roomId));
+      });
+    } catch (e, st) {
+      _log.severe('Failed to change notification mode', e, st);
+      if (!context.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(context).failedToChangeNotificationMode(e),
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
 }
 

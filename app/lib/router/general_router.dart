@@ -8,11 +8,15 @@ import 'package:acter/common/widgets/side_sheet_page.dart';
 import 'package:acter/features/bug_report/pages/bug_report_page.dart';
 import 'package:acter/features/chat/widgets/create_chat.dart';
 import 'package:acter/features/news/pages/add_news_page.dart';
+import 'package:acter/features/onboarding/pages/forgot_password.dart';
 import 'package:acter/features/onboarding/pages/intro_page.dart';
 import 'package:acter/features/onboarding/pages/intro_profile.dart';
 import 'package:acter/features/onboarding/pages/login_page.dart';
+import 'package:acter/features/onboarding/pages/link_email_page.dart';
 import 'package:acter/features/onboarding/pages/register_page.dart';
+import 'package:acter/features/onboarding/pages/save_username_page.dart';
 import 'package:acter/features/onboarding/pages/start_page.dart';
+import 'package:acter/features/onboarding/pages/upload_avatar_page.dart';
 import 'package:acter/features/pins/pages/create_pin_page.dart';
 import 'package:acter/features/search/pages/quick_jump.dart';
 import 'package:acter/features/settings/super_invites/pages/create.dart';
@@ -60,9 +64,34 @@ List<RouteBase> makeGeneralRoutes() {
     ),
     GoRoute(
       parentNavigatorKey: rootNavKey,
+      name: Routes.forgotPassword.name,
+      path: Routes.forgotPassword.route,
+      builder: (context, state) => const ForgotPassword(),
+    ),
+    GoRoute(
+      parentNavigatorKey: rootNavKey,
       name: Routes.authRegister.name,
       path: Routes.authRegister.route,
       builder: (context, state) => const RegisterPage(),
+    ),
+    GoRoute(
+      parentNavigatorKey: rootNavKey,
+      name: Routes.saveUsername.name,
+      path: Routes.saveUsername.route,
+      builder: (context, state) =>
+          SaveUsernamePage(username: state.uri.queryParameters['username']!),
+    ),
+    GoRoute(
+      parentNavigatorKey: rootNavKey,
+      name: Routes.linkEmail.name,
+      path: Routes.linkEmail.route,
+      builder: (context, state) => LinkEmailPage(),
+    ),
+    GoRoute(
+      parentNavigatorKey: rootNavKey,
+      name: Routes.uploadAvatar.name,
+      path: Routes.uploadAvatar.route,
+      builder: (context, state) => UploadAvatarPage(),
     ),
     GoRoute(
       parentNavigatorKey: rootNavKey,

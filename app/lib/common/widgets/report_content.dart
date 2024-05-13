@@ -1,9 +1,13 @@
 import 'package:acter/common/providers/chat_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
 import 'package:acter/common/themes/app_theme.dart';
+
+import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/widgets/default_dialog.dart';
 import 'package:acter/common/widgets/input_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
@@ -60,7 +64,7 @@ class ReportContentWidget extends ConsumerWidget {
             padding: const EdgeInsets.all(8.0),
             child: InputTextField(
               controller: textController,
-              hintText: 'Reason',
+              hintText: L10n.of(context).reason,
               textInputType: TextInputType.multiline,
               maxLines: 5,
             ),
@@ -70,11 +74,11 @@ class ReportContentWidget extends ConsumerWidget {
               return CheckboxListTile(
                 controlAffinity: ListTileControlAffinity.leading,
                 title: Text(
-                  'Block User (optional)',
+                  L10n.of(context).blockUserOptional,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 subtitle: Text(
-                  'Mark to hide all current and future content from this user and block them from contacting you',
+                  L10n.of(context).markToHideAllCurrentAndFutureContent,
                   style: Theme.of(context).textTheme.labelMedium!.copyWith(
                         color: Theme.of(context).colorScheme.neutral5,
                       ),
@@ -92,11 +96,11 @@ class ReportContentWidget extends ConsumerWidget {
       actions: <Widget>[
         OutlinedButton(
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          child: const Text('Close'),
+          child: Text(L10n.of(context).close),
         ),
-        ElevatedButton(
+        ActerPrimaryActionButton(
           onPressed: () => reportContent(context, ref, textController.text),
-          child: const Text('Report'),
+          child: Text(L10n.of(context).report),
         ),
       ],
     );
@@ -105,13 +109,7 @@ class ReportContentWidget extends ConsumerWidget {
   void reportContent(BuildContext ctx, WidgetRef ref, String reason) async {
     bool res = false;
     final ignoreFlag = ref.read(_ignoreUserProvider);
-    showAdaptiveDialog(
-      context: (ctx),
-      builder: (ctx) => const DefaultDialog(
-        title: Text('Sending Report'),
-        isLoader: true,
-      ),
-    );
+    EasyLoading.show(status: L10n.of(ctx).sendingReport);
     try {
       if (isSpace) {
         final space = await ref.read(spaceProvider(roomId).future);
@@ -133,55 +131,27 @@ class ReportContentWidget extends ConsumerWidget {
         }
       }
 
-      if (res) {
-        if (ctx.mounted) {
-          Navigator.of(ctx, rootNavigator: true).pop();
-          showAdaptiveDialog(
-            context: ctx,
-            builder: (ctx) => DefaultDialog(
-              title: const Text('Report sent!'),
-              actions: <Widget>[
-                OutlinedButton(
-                  onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-        }
-      } else {
-        if (ctx.mounted) {
-          Navigator.of(ctx, rootNavigator: true).pop();
-          showAdaptiveDialog(
-            context: ctx,
-            builder: (ctx) => DefaultDialog(
-              title: const Text('Report sending failed'),
-              actions: <Widget>[
-                OutlinedButton(
-                  onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-        }
+      if (!ctx.mounted) {
+        EasyLoading.dismiss();
+        return;
       }
-    } catch (e) {
-      if (ctx.mounted) {
-        Navigator.of(ctx, rootNavigator: true).pop();
-        showAdaptiveDialog(
-          context: ctx,
-          builder: (ctx) => DefaultDialog(
-            title: Text('Report sending failed due to some $e'),
-            actions: <Widget>[
-              OutlinedButton(
-                onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
+      if (res) {
+        EasyLoading.showToast(L10n.of(ctx).reportSent);
+      } else {
+        EasyLoading.showError(
+          L10n.of(ctx).reportSendingFailed,
+          duration: const Duration(seconds: 3),
         );
       }
+    } catch (e) {
+      if (!ctx.mounted) {
+        EasyLoading.dismiss();
+        return;
+      }
+      EasyLoading.showError(
+        L10n.of(ctx).reportSendingFailedDueTo(e),
+        duration: const Duration(seconds: 3),
+      );
     }
   }
 }

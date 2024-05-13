@@ -17,14 +17,17 @@ fn set_proxy(proxy: Option<string>);
 /// Rotate the logging file
 fn rotate_log_file() -> Result<string>;
 
-/// Allow flutter to call logging on rust side
-fn write_log(text: string, level: string) -> Result<()>;
+// would this get logged?
+fn would_log(target: string, level: string) -> bool;
+
+/// Log the entry to the rust logging
+fn write_log(target: string, level: string, message: string, file: Option<string>, line: Option<u32>, module_path: Option<string>);
 
 /// Create a new client for homeserver at url with storage at data_path
 fn login_new_client(base_path: string, media_cache_base_path: string, username: string, password: string, default_homeserver_name: string, default_homeserver_url: string, device_name: Option<string>) -> Future<Result<Client>>;
 
 /// Create a new client from the restore token
-fn login_with_token(base_path: string, restore_token: string) -> Future<Result<Client>>;
+fn login_with_token(base_path: string, media_cache_base_path: string, restore_token: string) -> Future<Result<Client>>;
 
 /// Create an anonymous client connecting to the homeserver
 fn guest_client(base_path: string, media_cache_base_path: string, default_homeserver_name: string, default_homeserver_url: string, device_name: Option<string>) -> Future<Result<Client>>;
@@ -239,6 +242,12 @@ object UserProfile {
 }
 
 object RoomProfile {
+    /// get room id
+    fn room_id() -> RoomId;
+
+    /// get room id as String
+    fn room_id_str() -> string;
+
     /// whether to have avatar
     fn has_avatar() -> bool;
 
@@ -580,6 +589,15 @@ object CalendarEvent {
     fn responded_by_me() -> Future<Result<OptionRsvpStatus>>;
     /// get the user id list who have responded with `Yes` on this event
     fn participants() -> Future<Result<Vec<string>>>;
+
+    /// get the comments manager
+    fn comments() -> Future<Result<CommentsManager>>;
+
+    /// get the attachments manager
+    fn attachments() -> Future<Result<AttachmentsManager>>;
+
+    /// Generate a iCal as a String for sharing with others
+    fn ical_for_sharing(file_name: string) -> Result<bool>;
 }
 
 object CalendarEventUpdateBuilder {
@@ -739,6 +757,9 @@ object ReactionManager {
 
     /// remove the like
     fn redact_like(reason: Option<string>, txn_id: Option<string>) -> Future<Result<EventId>>;
+
+    /// remove the reaction using symbol key
+    fn redact_reaction(sender_id: string, key: string, reason: Option<string>, txn_id: Option<string>) -> Future<Result<EventId>>;
 
     /// get informed about changes to this manager
     fn subscribe_stream() -> Stream<bool>;
@@ -943,6 +964,9 @@ object Room {
     /// the RoomId as a String
     fn room_id_str() -> string;
 
+    /// whether this is a Space
+    fn is_space() -> bool;
+
     /// the JoinRule as a String
     fn join_rule_str() -> string;
 
@@ -961,8 +985,8 @@ object Room {
     /// get the room profile that contains avatar and display name
     fn space_relations() -> Future<Result<SpaceRelations>>;
 
-    /// Whether this is a space (or, if this returns `false`, consider it a chat)
-    fn is_space() -> bool;
+    /// Whether this is a direct message (in chat)
+    fn is_direct() -> Future<Result<bool>>;
 
     /// add the following as a parent room and return event id of that event
     /// room can have multiple parents
@@ -973,6 +997,9 @@ object Room {
 
     /// the Membership of myself
     fn get_my_membership() -> Future<Result<Member>>;
+
+    /// the members currently in the room
+    fn active_members_ids() -> Future<Result<Vec<string>>>;
 
     /// the members currently in the room
     fn active_members() -> Future<Result<Vec<Member>>>;
@@ -997,6 +1024,9 @@ object Room {
     
     /// set the RoomNotificationMode
     fn set_notification_mode(new_mode: Option<string>) -> Future<Result<bool>>; 
+
+    /// update the power levels of specified member
+    fn update_power_level(user_id: string, level: i32) -> Future<Result<EventId>>;
 
 }
 
@@ -1029,27 +1059,34 @@ object SpaceDiff {
     fn value() -> Option<Space>;
 }
 
-object MsgContentDraft {
+object MsgDraft {
+
+    /// add a user mention
+    fn add_mention(user_id: string) -> Result<bool>;
+
+    /// whether to mention the entire room
+    fn add_room_mention(mention: bool) -> Result<bool>;
+    
     /// available for only image/audio/video/file
-    fn size(value: u64) -> MsgContentDraft;
+    fn size(value: u64) -> MsgDraft;
 
     /// available for only image/video
-    fn width(value: u64) -> MsgContentDraft;
+    fn width(value: u64) -> MsgDraft;
 
     /// available for only image/video
-    fn height(value: u64) -> MsgContentDraft;
+    fn height(value: u64) -> MsgDraft;
 
     /// available for only audio/video
-    fn duration(value: u64) -> MsgContentDraft;
+    fn duration(value: u64) -> MsgDraft;
 
     /// available for only image/video
-    fn blurhash(value: string) -> MsgContentDraft;
+    fn blurhash(value: string) -> MsgDraft;
 
     /// available for only file
-    fn filename(value: string) -> MsgContentDraft;
+    fn filename(value: string) -> MsgDraft;
 
     /// available for only location
-    fn geo_uri(value: string) -> MsgContentDraft;
+    fn geo_uri(value: string) -> MsgDraft;
 
     // convert this into a NewsSlideDraft;
     fn into_news_slide_draft() -> NewsSlideDraft;
@@ -1067,13 +1104,13 @@ object TimelineStream {
     fn paginate_backwards(count: u16) -> Future<Result<bool>>;
 
     /// send message using draft
-    fn send_message(draft: MsgContentDraft) -> Future<Result<bool>>;
+    fn send_message(draft: MsgDraft) -> Future<Result<bool>>;
 
     /// modify message using draft
-    fn edit_message(event_id: string, draft: MsgContentDraft) -> Future<Result<bool>>;
+    fn edit_message(event_id: string, draft: MsgDraft) -> Future<Result<bool>>;
 
     /// send reply to event
-    fn reply_message(event_id: string, draft: MsgContentDraft) -> Future<Result<bool>>;
+    fn reply_message(event_id: string, draft: MsgDraft) -> Future<Result<bool>>;
 
     /// send single receipt
     /// receipt_type: FullyRead | Read | ReadPrivate
@@ -1124,8 +1161,14 @@ object Convo {
     /// what is the description / topic
     fn topic() -> Option<string>;
 
+    /// set the name of the chat
+    fn set_name(name: string) -> Future<Result<EventId>>;
+
     /// set description / topic of the room
     fn set_topic(topic: string) -> Future<Result<EventId>>;
+
+    /// the members currently in the convo
+    fn active_members_ids() -> Future<Result<Vec<string>>>;
 
     /// the members currently in the room
     fn active_members() -> Future<Result<Vec<Member>>>;
@@ -1260,10 +1303,8 @@ object Comment {
     fn sender() -> UserId;
     /// When was this comment acknowledged by the server
     fn origin_server_ts() -> u64;
-    /// what is the comment's content in raw text
-    fn content_text() -> string;
-    /// what is the comment's content in html text
-    fn content_formatted() -> Option<string>;
+    /// what is the comment's content
+    fn msg_content() -> MsgContent;
     /// create a draft builder to reply to this comment
     fn reply_builder() -> CommentDraft;
 }
@@ -1273,6 +1314,9 @@ object CommentsManager {
     /// Get the list of comments (in arrival order)
     fn comments() -> Future<Result<Vec<Comment>>>;
 
+    /// String representation of the room id this comments manager is in
+    fn room_id_str() -> string;
+
     /// Does this item have any comments?
     fn has_comments() -> bool;
 
@@ -1281,6 +1325,12 @@ object CommentsManager {
 
     /// draft a new comment for this item
     fn comment_draft() -> CommentDraft;
+
+    /// subscribe to the changes this manager
+    fn subscribe_stream() -> Stream<bool>;
+
+    /// reload the data from the database
+    fn reload() -> Future<Result<CommentsManager>>;
 }
 
 
@@ -1301,22 +1351,39 @@ object AttachmentDraft {
 
 object Attachment {
     /// Who send this attachment
-    fn sender() -> UserId;
+    fn sender() -> string;
     /// When was this attachment acknowledged by the server
     fn origin_server_ts() -> u64;
-    
+    /// unique event id associated with this attachment
+    fn attachment_id_str() -> string;
+    /// the room this attachment lives in
+    fn room_id_str() -> string;
     /// the type of attachment
     fn type_str() -> string;
     /// if this is a media, hand over the description
     fn msg_content() -> MsgContent;
     /// if this is a media, hand over the data
     /// if thumb size is given, media thumbnail is returned
+
+    /// download media (image/audio/video/file/location) to specified path
+    /// if thumb size is given, media thumbnail is returned
     /// if thumb size is not given, media file is returned
-    fn source_binary(thumb_size: Option<ThumbnailSize>) -> Future<Result<buffer<u8>>>;
+    fn download_media(thumb_size: Option<ThumbnailSize>, dir_path: string) -> Future<Result<OptionString>>;
+
+    /// get the path that media (image/audio/video/file) was saved
+    /// return None when never downloaded
+    fn media_path(is_thumb: bool) -> Future<Result<OptionString>>;
 }
 
 /// Reference to the attachments section of a particular item
 object AttachmentsManager {
+    /// the room this attachments manager lives in
+    fn room_id_str() -> string;
+
+    /// Whether or not the current user can post, edit and delete
+    /// attachments in this manager
+    fn can_edit_attachments() -> bool;
+
     /// Get the list of attachments (in arrival order)
     fn attachments() -> Future<Result<Vec<Attachment>>>;
 
@@ -1327,10 +1394,13 @@ object AttachmentsManager {
     fn attachments_count() -> u32;
 
     /// create news slide for image msg
-    fn content_draft(base_draft: MsgContentDraft) -> Future<Result<AttachmentDraft>>;
+    fn content_draft(base_draft: MsgDraft) -> Future<Result<AttachmentDraft>>;
 
     // inform about the changes to this manager
     fn reload() -> Future<Result<AttachmentsManager>>;
+    
+    // redact attachment 
+    fn redact(attachment_id: string, reason: Option<string>, txn_id: Option<string>) -> Future<Result<EventId>>;
 
     /// subscribe to the changes of this model key
     fn subscribe_stream() -> Stream<bool>;
@@ -1429,6 +1499,9 @@ object Task {
 
     /// get the comments manager for this task
     fn comments() -> Future<Result<CommentsManager>>;
+
+    /// get the attachments manager
+    fn attachments() -> Future<Result<AttachmentsManager>>;
 }
 
 object TaskUpdateBuilder {
@@ -1592,6 +1665,12 @@ object TaskList {
 
     /// the id of the space this TaskList belongs to
     fn space_id_str() -> string;
+
+    /// get the comments manager
+    fn comments() -> Future<Result<CommentsManager>>;
+
+    /// get the attachments manager
+    fn attachments() -> Future<Result<AttachmentsManager>>;
 }
 
 object TaskListDraft {
@@ -1839,6 +1918,9 @@ object Space {
     fn set_name(name: string) -> Future<Result<EventId>>;
 
     /// the members currently in the space
+    fn active_members_ids() -> Future<Result<Vec<string>>>;
+
+    /// the members currently in the space
     fn active_members() -> Future<Result<Vec<Member>>>;
 
     /// the members invited to this room
@@ -1919,9 +2001,6 @@ object Space {
     /// Whenever this is submitted;
     fn update_app_settings(new_settings: ActerAppSettingsBuilder) -> Future<Result<string>>;
 
-    /// update the power levels of specified member
-    fn update_power_level(user_id: string, level: i32) -> Future<Result<EventId>>;
-
     /// update the power level for a feature
     fn update_feature_power_levels(feature: string, level: Option<i32>) -> Future<Result<bool>>;
 
@@ -1974,6 +2053,9 @@ object Member {
     /// Full user_id
     fn user_id() -> UserId;
 
+    /// RoomId this member is attachd to
+    fn room_id_str() -> string;
+
     /// The status of this member.
     fn membership_status_str() -> string;
 
@@ -1992,7 +2074,64 @@ object Member {
 
     /// remove this member from ignore list
     fn unignore() -> Future<Result<bool>>;
+
+    /// kick this member from this room
+    fn kick(msg: Option<string>) -> Future<Result<bool>>;
+
+    /// ban this member from this room
+    fn ban(msg: Option<string>) -> Future<Result<bool>>;
+
+    /// remove the member ban from this room
+    fn unban(msg: Option<string>) -> Future<Result<bool>>;
 }
+
+
+//     ###    ########  ########      ######  ######## ######## ######## #### ##    ##  ######    ######  
+//    ## ##   ##     ## ##     ##    ##    ## ##          ##       ##     ##  ###   ## ##    ##  ##    ## 
+//   ##   ##  ##     ## ##     ##    ##       ##          ##       ##     ##  ####  ## ##        ##       
+//  ##     ## ########  ########      ######  ######      ##       ##     ##  ## ## ## ##   ####  ######  
+//  ######### ##        ##                 ## ##          ##       ##     ##  ##  #### ##    ##        ## 
+//  ##     ## ##        ##           ##    ## ##          ##       ##     ##  ##   ### ##    ##  ##    ## 
+//  ##     ## ##        ##            ######  ########    ##       ##    #### ##    ##  ######    ######  
+
+
+
+
+object ActerUserAppSettings {
+    /// either of 'always', 'never' or 'wifiOnly'
+    fn auto_download_chat() -> Option<string>;
+    
+    /// whether to allow sending typing notice of users
+    fn typing_notice() -> Option<bool>;
+
+    /// update the builder with the current settings
+
+    /// if you intend to change anything
+    fn update_builder() -> ActerUserAppSettingsBuilder;
+}
+
+object ActerUserAppSettingsBuilder {
+    /// either of 'always', 'never' or 'wifiOnly'
+    fn auto_download_chat(value: string);
+
+    /// whether to allow sending typing notice of users
+    fn typing_notice(value: bool);
+
+    /// submit this updated version
+    fn send() -> Future<Result<bool>>;
+}
+
+
+
+//     ###     ######   ######   #######  ##     ## ##    ## ######## 
+//    ## ##   ##    ## ##    ## ##     ## ##     ## ###   ##    ##    
+//   ##   ##  ##       ##       ##     ## ##     ## ####  ##    ##    
+//  ##     ## ##       ##       ##     ## ##     ## ## ## ##    ##    
+//  ######### ##       ##       ##     ## ##     ## ##  ####    ##    
+//  ##     ## ##    ## ##    ## ##     ## ##     ## ##   ###    ##    
+//  ##     ##  ######   ######   #######   #######  ##    ##    ##    
+
+
 
 object Account {
     /// get user id of this account
@@ -2021,6 +2160,12 @@ object Account {
 
     /// remove user_id from ignore list
     fn unignore_user(user_id: string) -> Future<Result<bool>>;
+
+    /// the current app settings
+    fn acter_app_settings() -> Future<Result<ActerUserAppSettings>>;
+
+    /// listen to updates to the app settings
+    fn subscribe_app_settings_stream() -> Stream<bool>;
 }
 
 object ThreePidManager {
@@ -2082,6 +2227,14 @@ object PublicSearchResultItem {
     fn join_rule_str() -> string;
     // fn room_type() -> Option<RoomType>;
     fn room_type_str() -> string;
+
+    /// whether to have avatar
+    fn has_avatar() -> bool;
+
+    /// get the binary data of avatar
+    /// if thumb size is given, avatar thumbnail is returned
+    /// if thumb size is not given, avatar file is returned
+    fn get_avatar(thumb_size: Option<ThumbnailSize>) -> Future<Result<OptionBuffer>>;
 }
 
 object PublicSearchResult {
@@ -2307,9 +2460,6 @@ object Client {
     /// attempt to join a room
     fn join_convo(room_id_or_alias: string, server_name: Option<string>) -> Future<Result<Convo>>;
 
-    /// search the public directory for spaces
-    fn public_spaces(search_term: Option<string>, server: Option<string>, since: Option<string>) -> Future<Result<PublicSearchResult>>;
-
     /// Get the space that user belongs to
     fn space(room_id_or_alias: string) -> Future<Result<Space>>;
 
@@ -2325,6 +2475,9 @@ object Client {
     /// search the user directory
     fn search_users(search_term: string) -> Future<Result<Vec<UserProfile>>>;
 
+    /// search the public directory for rooms
+    fn search_public_room(search_term: Option<string>, server: Option<string>, room_filter: Option<string>, since: Option<string>) -> Future<Result<PublicSearchResult>>;
+
     /// Whether the user already verified the device
     fn verified_device(dev_id: string) -> Future<Result<bool>>;
 
@@ -2336,6 +2489,16 @@ object Client {
 
     /// Get session manager that returns all/verified/unverified/inactive session list
     fn session_manager() -> SessionManager;
+
+    /// Trigger verification of another device
+    /// returns flow id of verification
+    fn request_verification(dev_id: string) -> Future<Result<VerificationEvent>>;
+
+    /// install verification request event handler
+    fn install_request_event_handler(flow_id: string) -> Future<Result<bool>>;
+
+    /// install sas verification event handler
+    fn install_sas_event_handler(flow_id: string) -> Future<Result<bool>>;
 
     /// Return the event handler of device new
     fn device_new_event_rx() -> Option<Stream<DeviceNewEvent>>;
@@ -2440,28 +2603,31 @@ object Client {
     fn notification_settings() -> Future<Result<NotificationSettings>>;
 
     /// make draft to send text plain msg
-    fn text_plain_draft(body: string) -> MsgContentDraft;
+    fn text_plain_draft(body: string) -> MsgDraft;
 
     /// make draft to send text markdown msg
-    fn text_markdown_draft(body: string) -> MsgContentDraft;
+    fn text_markdown_draft(body: string) -> MsgDraft;
 
     /// make draft to send html marked up msg
-    fn text_html_draft(html: string, plain: string) -> MsgContentDraft;
+    fn text_html_draft(html: string, plain: string) -> MsgDraft;
 
     /// make draft to send image msg
-    fn image_draft(source: string, mimetype: string) -> MsgContentDraft;
+    fn image_draft(source: string, mimetype: string) -> MsgDraft;
 
     /// make draft to send audio msg
-    fn audio_draft(source: string, mimetype: string) -> MsgContentDraft;
+    fn audio_draft(source: string, mimetype: string) -> MsgDraft;
 
     /// make draft to send video msg
-    fn video_draft(source: string, mimetype: string) -> MsgContentDraft;
+    fn video_draft(source: string, mimetype: string) -> MsgDraft;
 
     /// make draft to send file msg
-    fn file_draft(source: string, mimetype: string) -> MsgContentDraft;
+    fn file_draft(source: string, mimetype: string) -> MsgDraft;
 
     /// make draft to send location msg
-    fn location_draft(body: string, source: string) -> MsgContentDraft;
+    fn location_draft(body: string, source: string) -> MsgDraft;
+
+    /// get access to the backup manager
+    fn backup_manager() -> BackupManager;
 }
 
 object NotificationSettings {
@@ -2496,17 +2662,20 @@ object Invitation {
     /// get the timestamp of this invitation in milliseconds
     fn origin_server_ts() -> Option<u64>;
 
-    /// get the room id of this invitation
-    fn room_id() -> RoomId;
+    /// whether this is an invite to a DM
+    fn is_dm() -> bool;
 
-    /// get the room name of this invitation
-    fn room_name() -> Future<Result<string>>;
+    /// the RoomId as a String
+    fn room_id_str() -> string;
 
-    /// get the user id of this invitation sender
-    fn sender() -> UserId;
+    /// get the room of this invitation
+    fn room() -> Room;
+
+    /// get the user id of this invitation sender as string
+    fn sender_id_str() -> string;
 
     /// get the user profile that contains avatar and display name
-    fn get_sender_profile() -> Future<Result<UserProfile>>;
+    fn sender_profile() -> Option<UserProfile>;
 
     /// accept invitation about me to this room
     fn accept() -> Future<Result<bool>>;
@@ -2590,7 +2759,7 @@ object VerificationEvent {
     fn event_type() -> string;
 
     /// Get flow id (EventId or TransactionId)
-    fn flow_id() -> Option<string>;
+    fn flow_id() -> string;
 
     /// Get user id of event sender
     fn sender() -> string;
@@ -2608,6 +2777,7 @@ object VerificationEvent {
     fn accept_verification_request() -> Future<Result<bool>>;
 
     /// Bob cancels the verification request from Alice
+    /// alternative of terminate_verification
     fn cancel_verification_request() -> Future<Result<bool>>;
 
     /// Bob accepts the verification request from Alice with specified methods
@@ -2622,17 +2792,11 @@ object VerificationEvent {
     /// Bob cancels the SAS verification
     fn cancel_sas_verification() -> Future<Result<bool>>;
 
-    /// Alice sends the verification key to Bob and vice versa
-    fn send_verification_key() -> Future<Result<bool>>;
-
     /// Alice says to Bob that SAS verification matches and vice versa
     fn confirm_sas_verification() -> Future<Result<bool>>;
 
     /// Alice says to Bob that SAS verification doesn't match and vice versa
     fn mismatch_sas_verification() -> Future<Result<bool>>;
-
-    /// Alice and Bob reviews the AnyToDeviceEvent::KeyVerificationMac
-    fn review_verification_mac() -> Future<Result<bool>>;
 }
 
 object VerificationEmoji {
@@ -2662,7 +2826,13 @@ object SessionManager {
     fn delete_devices(dev_ids: Vec<string>, username: string, password: string) -> Future<Result<bool>>;
 
     /// Trigger verification of another device
-    fn request_verification(dev_id: string) -> Future<Result<bool>>;
+    /// returns flow id of verification
+    fn request_verification(dev_id: string) -> Future<Result<string>>;
+
+    /// Terminate verification of another device
+    /// alternative of cancel_verification_request
+    /// this fn is used in case without verification event
+    fn terminate_verification(flow_id: string) -> Future<Result<bool>>;
 }
 
 //  ########  ######## ##     ## ####  ######  ########  ######  
@@ -2681,16 +2851,20 @@ object DeviceNewEvent {
     fn device_id() -> DeviceId;
 
     /// Request verification to any devices of user
-    fn request_verification_to_user() -> Future<Result<bool>>;
+    /// returns flow id of verification
+    fn request_verification_to_user() -> Future<Result<string>>;
 
     /// Request verification to specific device
-    fn request_verification_to_device(dev_id: string) -> Future<Result<bool>>;
+    /// returns flow id of verification
+    fn request_verification_to_device(dev_id: string) -> Future<Result<string>>;
 
     /// Request verification to any devices of user with methods
-    fn request_verification_to_user_with_methods(methods: Vec<string>) -> Future<Result<bool>>;
+    /// returns flow id of verification
+    fn request_verification_to_user_with_methods(methods: Vec<string>) -> Future<Result<string>>;
 
     /// Request verification to specific device with methods
-    fn request_verification_to_device_with_methods(dev_id: string, methods: Vec<string>) -> Future<Result<bool>>;
+    /// returns flow id of verification
+    fn request_verification_to_device_with_methods(dev_id: string, methods: Vec<string>) -> Future<Result<string>>;
 }
 
 /// Deliver devices changed event from rust to flutter
@@ -2721,4 +2895,38 @@ object DeviceRecord {
     fn is_active() -> bool;
     /// whether it is this session
     fn is_me() -> bool;
+}
+
+
+
+//     ########     ###     ######  ##    ## ##     ## ########     ##     ##    ###    ##    ##    ###     ######   ######## ########  
+//     ##     ##   ## ##   ##    ## ##   ##  ##     ## ##     ##    ###   ###   ## ##   ###   ##   ## ##   ##    ##  ##       ##     ## 
+//     ##     ##  ##   ##  ##       ##  ##   ##     ## ##     ##    #### ####  ##   ##  ####  ##  ##   ##  ##        ##       ##     ## 
+//     ########  ##     ## ##       #####    ##     ## ########     ## ### ## ##     ## ## ## ## ##     ## ##   #### ######   ########  
+//     ##     ## ######### ##       ##  ##   ##     ## ##           ##     ## ######### ##  #### ######### ##    ##  ##       ##   ##   
+//     ##     ## ##     ## ##    ## ##   ##  ##     ## ##           ##     ## ##     ## ##   ### ##     ## ##    ##  ##       ##    ##  
+//     ########  ##     ##  ######  ##    ##  #######  ##           ##     ## ##     ## ##    ## ##     ##  ######   ######## ##     ## 
+
+
+/// Manage Encryption Backups
+object BackupManager {
+
+    /// Create a new backup version, encrypted with a new backup recovery key.
+    fn enable() -> Future<Result<string>>;
+
+    /// Reset the existing backup version, encrypted with a new backup recovery key.
+    fn reset() -> Future<Result<string>>;
+
+    /// Disable and delete the currently active backup.
+    fn disable() -> Future<Result<bool>>;
+
+    /// Current state as a string
+    fn state_str() -> string;
+
+    /// state as a string via a stream. Issues the current state immediately
+    fn state_stream() -> Stream<string>;
+
+    /// Open the existing secret store using the given key and import the keys 
+    fn recover(secret: string) -> Future<Result<bool>>;
+
 }

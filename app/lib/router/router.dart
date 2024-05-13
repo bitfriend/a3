@@ -1,11 +1,11 @@
-import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter/common/pages/not_found.dart';
 import 'package:acter/common/utils/constants.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/features/home/pages/home_shell.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
+import 'package:acter/router/general_router.dart';
 import 'package:acter/router/shell_routers/activities_shell_router.dart';
 import 'package:acter/router/shell_routers/chat_shell_router.dart';
-import 'package:acter/router/general_router.dart';
 import 'package:acter/router/shell_routers/home_shell_router.dart';
 import 'package:acter/router/shell_routers/search_shell_router.dart';
 import 'package:acter/router/shell_routers/update_shell_router.dart';
@@ -32,7 +32,10 @@ Future<String?> authGuardRedirect(
       return null;
     }
   } catch (error, trace) {
-    // ignore: deprecated_member_use
+    // ignore: deprecated_member_use, avoid_print
+    print('Fatal error: $error');
+    // ignore: avoid_print
+    print('Stack: $trace');
     return state.namedLocation(
       Routes.fatalFail.name,
       queryParameters: {'error': error.toString(), 'trace': trace.toString()},
@@ -46,7 +49,7 @@ Future<String?> authGuardRedirect(
 
   // ignore: deprecated_member_use
   return state.namedLocation(
-    Routes.start.name,
+    Routes.intro.name,
     queryParameters: {'next': next},
   );
 }
@@ -67,8 +70,13 @@ Future<String?> forwardRedirect(
       client = await acterSdk.getClientWithDeviceId(deviceId!, true);
       // ignore: use_build_context_synchronously
       final ref = ProviderScope.containerOf(context);
-      ref.invalidate(clientProvider); // ensure we have selected the right client
-    } catch(error) {
+      // ensure we have selected the right client
+      ref.invalidate(clientProvider);
+    } catch (error, trace) {
+      // ignore: deprecated_member_use, avoid_print
+      print('Client not found error: $error');
+      // ignore: avoid_print
+      print('Stack: $trace');
       return null;
     }
     final roomId = state.uri.queryParameters['roomId'];
@@ -81,11 +89,16 @@ Future<String?> forwardRedirect(
     } else {
       // final eventId = state.uri.queryParameters['eventId'];
       // with the event ID or further information we could figure out the specific action
-      return state
-          .namedLocation(Routes.space.name, pathParameters: {'spaceId': roomId});
+      return state.namedLocation(
+        Routes.space.name,
+        pathParameters: {'spaceId': roomId},
+      );
     }
   } catch (error, trace) {
-    // ignore: deprecated_member_use
+    // ignore: deprecated_member_use, avoid_print
+    print('Fatal error: $error');
+    // ignore: avoid_print
+    print('Stack: $trace');
     return state.namedLocation(
       Routes.fatalFail.name,
       queryParameters: {'error': error.toString(), 'trace': trace.toString()},
@@ -96,6 +109,8 @@ Future<String?> forwardRedirect(
 final GlobalKey<NavigatorState> rootNavKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
 );
+
+final homeShellKey = GlobalKey(debugLabel: 'home-shell');
 
 final GlobalKey<NavigatorState> homeTabNavKey = GlobalKey<NavigatorState>(
   debugLabel: 'homeTabNavKey',
@@ -123,15 +138,14 @@ List<RouteBase> makeRoutes(Ref ref) {
         GoRouterState state,
         StatefulNavigationShell navigationShell,
       ) {
-        return HomeShell(navigationShell: navigationShell);
+        return HomeShell(key: homeShellKey, navigationShell: navigationShell);
       },
-      branches:
-          isDesktop ? desktopShellBranches(ref) : mobileShellBranches(ref),
+      branches: shellBranches(ref),
     ),
   ];
 }
 
-List<StatefulShellBranch> mobileShellBranches(Ref ref) {
+List<StatefulShellBranch> shellBranches(Ref ref) {
   return [
     StatefulShellBranch(
       navigatorKey: homeTabNavKey,
@@ -156,23 +170,12 @@ List<StatefulShellBranch> mobileShellBranches(Ref ref) {
   ];
 }
 
-List<StatefulShellBranch> desktopShellBranches(Ref ref) {
-  return [
-    StatefulShellBranch(
-      navigatorKey: searchTabNavKey,
-      routes: makeSearchShellRoutes(ref),
-    ),
-    StatefulShellBranch(
-      navigatorKey: homeTabNavKey,
-      routes: makeHomeShellRoutes(ref),
-    ),
-    StatefulShellBranch(
-      navigatorKey: chatTabNavKey,
-      routes: makeChatShellRoutes(ref),
-    ),
-    StatefulShellBranch(
-      navigatorKey: activitiesTabNavKey,
-      routes: makeActivitiesShellRoutes(ref),
-    ),
-  ];
+GoRouter makeRouter(Ref ref) {
+  return GoRouter(
+    errorBuilder: (context, state) => NotFoundPage(routerState: state),
+    navigatorKey: rootNavKey,
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    routes: makeRoutes(ref),
+  );
 }
