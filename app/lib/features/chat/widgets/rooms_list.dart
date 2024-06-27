@@ -1,5 +1,6 @@
-import 'package:acter/common/themes/app_theme.dart';
+import 'package:acter/common/themes/colors/color_scheme.dart';
 import 'package:acter/common/utils/routes.dart';
+import 'package:acter/common/widgets/plus_icon_widget.dart';
 import 'package:acter/features/chat/models/room_list_filter_state/room_list_filter_state.dart';
 import 'package:acter/features/chat/providers/room_list_filter_provider.dart';
 import 'package:acter/features/chat/widgets/convo_list.dart';
@@ -115,7 +116,7 @@ class _RoomsListWidgetState extends ConsumerState<RoomsListWidget> {
       children: [
         const SizedBox(height: 5),
         SearchBar(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             const RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
@@ -182,7 +183,7 @@ class _RoomsListWidgetState extends ConsumerState<RoomsListWidget> {
         ref.watch(roomListFilterProvider.select((value) => value.selection));
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.background,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -276,13 +277,9 @@ class _RoomsListWidgetState extends ConsumerState<RoomsListWidget> {
                               child: const Icon(Atlas.filter_thin),
                             ),
                           ),
-                        IconButton(
+                        PlusIconWidget(
                           onPressed: () async => context.pushNamed(
                             Routes.createChat.name,
-                          ),
-                          padding: const EdgeInsets.only(right: 10, left: 10),
-                          icon: const Icon(
-                            Atlas.plus_circle_thin,
                           ),
                         ),
                       ],

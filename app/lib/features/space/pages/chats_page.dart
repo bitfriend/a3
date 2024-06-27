@@ -1,8 +1,7 @@
 import 'package:acter/common/providers/chat_providers.dart';
 import 'package:acter/common/providers/room_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/themes/app_theme.dart';
-import 'package:acter/common/themes/colors/color_scheme.dart';
+import 'package:acter/common/toolkit/buttons/inline_text_button.dart';
 import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/utils/routes.dart';
 import 'package:acter/common/widgets/chat/convo_card.dart';
@@ -49,10 +48,7 @@ class SpaceChatsPage extends ConsumerWidget {
             children: [
               PopupMenuButton(
                 key: actionsMenuKey,
-                icon: Icon(
-                  Atlas.plus_circle,
-                  color: Theme.of(context).colorScheme.neutral5,
-                ),
+                icon: const Icon(Atlas.plus_circle),
                 iconSize: 28,
                 color: Theme.of(context).colorScheme.surface,
                 itemBuilder: (BuildContext context) => <PopupMenuEntry>[
@@ -121,6 +117,15 @@ class SpaceChatsPage extends ConsumerWidget {
                 child: Text(L10n.of(context).createSpaceChat),
               )
             : null,
+        secondaryButton: canCreateSpace
+            ? ActerInlineTextButton(
+                onPressed: () => context.pushNamed(
+                  Routes.linkChat.name,
+                  pathParameters: {'spaceId': spaceIdOrAlias},
+                ),
+                child: Text(L10n.of(context).linkToChat),
+              )
+            : null,
       ),
     );
   }
@@ -136,7 +141,7 @@ class SpaceChatsPage extends ConsumerWidget {
             sizeFactor: animation,
             child: ConvoCard(
               room: rooms[index],
-              showParent: false,
+              showParents: false,
               onTap: () => goToChat(context, rooms[index].getRoomIdStr()),
             ),
           ),
@@ -196,18 +201,15 @@ class SpaceChatsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(gradient: primaryGradient),
-      child: CustomScrollView(
-        slivers: <Widget>[
-          SliverToBoxAdapter(
-            child: SpaceHeader(spaceIdOrAlias: spaceIdOrAlias),
-          ),
-          renderRelated(context, ref),
-          renderChats(context, ref),
-          renderFurther(context, ref),
-        ],
-      ),
+    return CustomScrollView(
+      slivers: <Widget>[
+        SliverToBoxAdapter(
+          child: SpaceHeader(spaceIdOrAlias: spaceIdOrAlias),
+        ),
+        renderRelated(context, ref),
+        renderChats(context, ref),
+        renderFurther(context, ref),
+      ],
     );
   }
 }

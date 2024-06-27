@@ -1,4 +1,3 @@
-import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter/common/utils/utils.dart';
 import 'package:acter/features/pins/providers/pins_provider.dart';
 import 'package:flutter/material.dart';
@@ -47,12 +46,10 @@ class LinksCard extends ConsumerWidget {
                         await openLink(target, context);
                       },
                       style: ButtonStyle(
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5),
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.neutral4,
+                            side: const BorderSide(
                               style: BorderStyle.solid,
                               strokeAlign: 5,
                             ),

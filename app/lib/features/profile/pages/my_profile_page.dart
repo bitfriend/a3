@@ -39,6 +39,7 @@ class _ChangeDisplayNameState extends State<ChangeDisplayName> {
   Widget build(BuildContext context) {
     final account = widget.account;
     return AlertDialog(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       title: Text(L10n.of(context).changeYourDisplayName),
       content: Form(
         key: _formKey,
@@ -213,13 +214,14 @@ class MyProfilePage extends StatelessWidget {
           child: Stack(
             children: [
               ActerAvatar(
-                mode: DisplayMode.DM,
-                avatarInfo: AvatarInfo(
-                  uniqueId: data.account.userId().toString(),
-                  avatar: data.profile.getAvatarImage(),
-                  displayName: data.profile.displayName,
+                options: AvatarOptions.DM(
+                  AvatarInfo(
+                    uniqueId: data.account.userId().toString(),
+                    avatar: data.profile.getAvatarImage(),
+                    displayName: data.profile.displayName,
+                  ),
+                  size: 50,
                 ),
-                size: 50,
               ),
               Positioned.fill(
                 child: Align(

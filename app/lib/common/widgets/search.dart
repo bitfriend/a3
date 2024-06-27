@@ -1,4 +1,3 @@
-import 'package:acter/common/themes/app_theme.dart';
 import 'package:atlas_icons/atlas_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/l10n.dart';
@@ -7,8 +6,11 @@ class Search extends StatelessWidget {
   final TextEditingController searchController;
   final Function(dynamic) onChanged;
 
-  const Search(
-      {super.key, required this.searchController, required this.onChanged,});
+  const Search({
+    super.key,
+    required this.searchController,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +21,14 @@ class Search extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Theme.of(context).colorScheme.background,
+              color: Theme.of(context).colorScheme.surface,
             ),
             child: TextField(
               decoration: InputDecoration(
                 hintText: L10n.of(context).search,
                 hintStyle: TextStyle(
                   fontSize: 16,
-                  color: Theme.of(context).colorScheme.neutral4,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
                 prefixIcon: const Icon(Atlas.magnifying_glass),
                 border: InputBorder.none,

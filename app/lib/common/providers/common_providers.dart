@@ -5,7 +5,10 @@ import 'package:acter/common/providers/notifiers/notification_settings_notifier.
 import 'package:acter/common/utils/utils.dart';
 import 'package:acter/features/home/providers/client_providers.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
+import 'package:logging/logging.dart';
 import 'package:riverpod/riverpod.dart';
+
+final _log = Logger('a3::common::providers');
 
 // Loading Providers
 final loadingProvider = StateProvider<bool>((ref) => false);
@@ -24,6 +27,18 @@ Future<ProfileData> getProfileData(Account account) async {
   final avatar = await account.avatar(null);
   return ProfileData(displayName.text(), avatar.data());
 }
+
+final genericUpdatesStream =
+    StreamProvider.family<int, String>((ref, key) async* {
+  final client = ref.watch(alwaysClientProvider);
+  int counter = 0; // to ensure the value updates
+
+  // ignore: unused_local_variable
+  await for (final value in client.subscribeStream(key)) {
+    yield counter;
+    counter += 1;
+  }
+});
 
 final myUserIdStrProvider = StateProvider(
   (ref) => ref.watch(
@@ -63,12 +78,11 @@ class EmailAddresses {
 }
 
 final emailAddressesProvider = FutureProvider((ref) async {
-  final client = ref.watch(alwaysClientProvider);
-  final threePidManager = client.threePidManager();
-  final confirmed =
-      asDartStringList(await threePidManager.confirmedEmailAddresses());
-  final requested =
-      asDartStringList(await threePidManager.requestedEmailAddresses());
+  final account = ref.watch(accountProvider);
+  // ensure we are updated if the upgrade comes down the wire.
+  ref.watch(genericUpdatesStream('global.acter.dev.three_pid'));
+  final confirmed = asDartStringList(await account.confirmedEmailAddresses());
+  final requested = asDartStringList(await account.requestedEmailAddresses());
   final List<String> unconfirmed = [];
   for (var i = 0; i < requested.length; i++) {
     if (!confirmed.contains(requested[i])) {
@@ -77,3 +91,14 @@ final emailAddressesProvider = FutureProvider((ref) async {
   }
   return EmailAddresses(confirmed, unconfirmed);
 });
+
+final canRedactProvider = FutureProvider.autoDispose.family<bool, dynamic>(
+  ((ref, arg) async {
+    try {
+      return await arg.canRedact();
+    } catch (error) {
+      _log.severe('Fetching canRedact failed for $arg', error);
+      return false;
+    }
+  }),
+);

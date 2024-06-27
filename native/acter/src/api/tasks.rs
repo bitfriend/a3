@@ -3,7 +3,7 @@ use acter_core::{
         tasks::{self, Priority, TaskBuilder, TaskListBuilder},
         Color,
     },
-    models::{self, ActerModel, AnyActerModel, TaskStats},
+    models::{self, can_redact, ActerModel, AnyActerModel, TaskStats},
     statics::KEYS,
 };
 use anyhow::{bail, Context, Result};
@@ -223,6 +223,12 @@ impl TaskListDraft {
         self
     }
 
+    pub fn description_html(&mut self, body: String, html_body: String) -> &mut Self {
+        let desc = TextMessageEventContent::html(body, html_body);
+        self.content.description(Some(desc));
+        self
+    }
+
     pub fn unset_description(&mut self) -> &mut Self {
         self.content.description(None);
         self
@@ -388,6 +394,15 @@ impl TaskList {
                     content,
                 })
             })
+            .await?
+    }
+
+    pub async fn can_redact(&self) -> Result<bool> {
+        let sender = self.content.sender().to_owned();
+        let room = self.room.clone();
+
+        RUNTIME
+            .spawn(async move { Ok(can_redact(&room, &sender).await?) })
             .await?
     }
 
@@ -620,6 +635,15 @@ impl Task {
             .await?
     }
 
+    pub async fn can_redact(&self) -> Result<bool> {
+        let sender = self.content.sender().to_owned();
+        let room = self.room.clone();
+
+        RUNTIME
+            .spawn(async move { Ok(can_redact(&room, &sender).await?) })
+            .await?
+    }
+
     fn is_joined(&self) -> bool {
         matches!(self.room.state(), RoomState::Joined)
     }
@@ -729,6 +753,12 @@ impl TaskDraft {
 
     pub fn description_text(&mut self, body: String) -> &mut Self {
         let desc = TextMessageEventContent::plain(body);
+        self.content.description(Some(desc));
+        self
+    }
+
+    pub fn description_html(&mut self, body: String, html_body: String) -> &mut Self {
+        let desc = TextMessageEventContent::html(body, html_body);
         self.content.description(Some(desc));
         self
     }
@@ -872,6 +902,12 @@ impl TaskUpdateBuilder {
 
     pub fn description_text(&mut self, body: String) -> &mut Self {
         let desc = TextMessageEventContent::plain(body);
+        self.content.description(Some(Some(desc)));
+        self
+    }
+
+    pub fn description_html(&mut self, body: String, html_body: String) -> &mut Self {
+        let desc = TextMessageEventContent::html(body, html_body);
         self.content.description(Some(Some(desc)));
         self
     }
@@ -1069,6 +1105,12 @@ impl TaskListUpdateBuilder {
 
     pub fn description_text(&mut self, body: String) -> &mut Self {
         let desc = TextMessageEventContent::plain(body);
+        self.content.description(Some(desc));
+        self
+    }
+
+    pub fn description_html(&mut self, body: String, html_body: String) -> &mut Self {
+        let desc = TextMessageEventContent::html(body, html_body);
         self.content.description(Some(desc));
         self
     }

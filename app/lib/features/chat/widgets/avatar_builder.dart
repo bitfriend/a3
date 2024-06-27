@@ -28,21 +28,22 @@ class AvatarBuilder extends ConsumerWidget {
         return Padding(
           padding: const EdgeInsets.only(right: 10),
           child: ActerAvatar(
-            onAvatarTap: () async {
-              // ignore: use_build_context_synchronously
-              showMemberInfoDrawer(
-                context: context,
-                roomId: roomId,
-                memberId: userId,
-              );
-            },
-            mode: DisplayMode.DM,
-            avatarInfo: AvatarInfo(
-              uniqueId: userId,
-              displayName: profile.displayName ?? userId,
-              avatar: profile.getAvatarImage(),
+            options: AvatarOptions.DM(
+              AvatarInfo(
+                uniqueId: userId,
+                displayName: profile.displayName ?? userId,
+                avatar: profile.getAvatarImage(),
+                onAvatarTap: () async {
+                  // ignore: use_build_context_synchronously
+                  showMemberInfoDrawer(
+                    context: context,
+                    roomId: roomId,
+                    memberId: userId,
+                  );
+                },
+              ),
+              size: 14,
             ),
-            size: 14,
           ),
         );
       },
@@ -51,9 +52,10 @@ class AvatarBuilder extends ConsumerWidget {
         return Padding(
           padding: const EdgeInsets.only(right: 10),
           child: ActerAvatar(
-            mode: DisplayMode.DM,
-            avatarInfo: AvatarInfo(uniqueId: userId, displayName: userId),
-            size: 14,
+            options: AvatarOptions.DM(
+              AvatarInfo(uniqueId: userId, displayName: userId),
+              size: 14,
+            ),
           ),
         );
       },
@@ -61,9 +63,10 @@ class AvatarBuilder extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.only(right: 10),
           child: ActerAvatar(
-            mode: DisplayMode.DM,
-            avatarInfo: AvatarInfo(uniqueId: userId, displayName: userId),
-            size: 14,
+            options: AvatarOptions.DM(
+              AvatarInfo(uniqueId: userId, displayName: userId),
+              size: 14,
+            ),
           ),
         ),
       ),

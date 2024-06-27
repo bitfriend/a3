@@ -1,6 +1,5 @@
 import 'package:acter/common/providers/chat_providers.dart';
 import 'package:acter/common/providers/space_providers.dart';
-import 'package:acter/common/themes/app_theme.dart';
 
 import 'package:acter/common/toolkit/buttons/primary_action_button.dart';
 import 'package:acter/common/widgets/default_dialog.dart';
@@ -11,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
 
 final _log = Logger('a3::common::redact');
@@ -60,9 +60,7 @@ class RedactContentWidget extends ConsumerWidget {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           description ?? L10n.of(context).removeThisContent,
-          style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: Theme.of(context).colorScheme.neutral6,
-              ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ),
       description: Padding(
@@ -114,6 +112,7 @@ class RedactContentWidget extends ConsumerWidget {
         return;
       }
       EasyLoading.showToast(L10n.of(ctx).contentSuccessfullyRemoved);
+      if (ctx.canPop()) ctx.pop();
       if (onSuccess != null) {
         onSuccess!();
       }

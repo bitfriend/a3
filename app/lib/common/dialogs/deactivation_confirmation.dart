@@ -21,6 +21,7 @@ void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
     context: context,
     builder: (BuildContext ctx) {
       return AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text(
           L10n.of(context).deactivateAccount,
           style: TextStyle(
@@ -39,7 +40,7 @@ void deactivationConfirmationDialog(BuildContext context, WidgetRef ref) {
                       horizontal: 10,
                       vertical: 5,
                     ),
-                    color: Theme.of(context).colorScheme.background,
+                    color: Theme.of(context).colorScheme.surface,
                     child: Column(
                       children: [
                         Text(

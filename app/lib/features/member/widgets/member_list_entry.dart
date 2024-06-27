@@ -1,7 +1,6 @@
 import 'package:acter/features/member/dialogs/show_member_info_drawer.dart';
 import 'package:acter/common/models/profile_data.dart';
 import 'package:acter/common/providers/room_providers.dart';
-import 'package:acter/common/themes/app_theme.dart';
 import 'package:acter_avatar/acter_avatar.dart';
 import 'package:acter_flutter_sdk/acter_flutter_sdk_ffi.dart';
 import 'package:atlas_icons/atlas_icons.dart';
@@ -18,11 +17,12 @@ class _MemberListInnerSkeleton extends StatelessWidget {
     return ListTile(
       leading: Skeletonizer(
         child: ActerAvatar(
-          mode: DisplayMode.DM,
-          avatarInfo: AvatarInfo(
-            uniqueId: L10n.of(context).noIdGiven,
+          options: AvatarOptions.DM(
+            AvatarInfo(
+              uniqueId: L10n.of(context).noIdGiven,
+            ),
+            size: 18,
           ),
-          size: 18,
         ),
       ),
       title: Skeletonizer(
@@ -35,10 +35,7 @@ class _MemberListInnerSkeleton extends StatelessWidget {
       subtitle: Skeletonizer(
         child: Text(
           L10n.of(context).noId,
-          style: Theme.of(context)
-              .textTheme
-              .labelLarge!
-              .copyWith(color: Theme.of(context).colorScheme.neutral5),
+          style: Theme.of(context).textTheme.labelLarge,
           overflow: TextOverflow.ellipsis,
         ),
       ),
@@ -121,13 +118,14 @@ class _MemberListEntryInner extends ConsumerWidget {
         }
       },
       leading: ActerAvatar(
-        mode: DisplayMode.DM,
-        avatarInfo: AvatarInfo(
-          uniqueId: userId,
-          displayName: profile.displayName,
-          avatar: profile.getAvatarImage(),
+        options: AvatarOptions.DM(
+          AvatarInfo(
+            uniqueId: userId,
+            displayName: profile.displayName,
+            avatar: profile.getAvatarImage(),
+          ),
+          size: 18,
         ),
-        size: 18,
       ),
       title: Text(
         profile.displayName ?? userId,
@@ -137,10 +135,7 @@ class _MemberListEntryInner extends ConsumerWidget {
       subtitle: profile.displayName != null
           ? Text(
               userId,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge!
-                  .copyWith(color: Theme.of(context).colorScheme.neutral5),
+              style: Theme.of(context).textTheme.labelLarge,
               overflow: TextOverflow.ellipsis,
             )
           : null,
